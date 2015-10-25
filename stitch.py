@@ -77,7 +77,7 @@ def imageStitching(img1,img2):
     
     # Use a SURF detector
     # Hessian Threshold at 5000
-    detector = cv2.SURF(300)
+    detector = cv2.SURF()
     # Finding key points in first image
     image1Features, image1Descs = detector.detectAndCompute(image1,None)
     
@@ -229,8 +229,8 @@ frameCounts = int(capLeft.get(7))
 retLeft, left = capLeft.read()
 retCentre, centre = capCentre.read()
 retRight, right = capRight.read()
-#combined = imageStitching(left,centre)
-leftCentre = imageStitching(left,centre)
+#combined = imageStitching(centre,left)
+leftCentre = imageStitching(centre,left)
 combined = imageStitching(leftCentre,right)
 cv2.imwrite("stitched.jpg",combined)
 
