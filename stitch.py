@@ -220,6 +220,12 @@ def imageStitching(img1,img2):
 capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mov")
 capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mov")
 capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mov")
+
+#For windows version
+##capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mp4")
+##capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mp4")
+##capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mp4")
+
 # Get total number of frames
 frameCounts = int(capLeft.get(7))
 retLeft, left = capLeft.read()
