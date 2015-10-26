@@ -77,7 +77,7 @@ def imageStitching(img1,img2):
     
     # Use a SURF detector
     # Hessian Threshold at 5000
-    detector = cv2.SURF(300)
+    detector = cv2.SURF()
     # Finding key points in first image
     image1Features, image1Descs = detector.detectAndCompute(image1,None)
     
@@ -221,18 +221,19 @@ capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mov
 capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mov")
 capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mov")
 
-#tryLeft = cv2.imread('imageLeft.jpg')
-#tryCentre = cv2.imread('imageCentre.jpg')
+#For windows version
+##capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mp4")
+##capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mp4")
+##capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mp4")
 
 # Get total number of frames
 frameCounts = int(capLeft.get(7))
 retLeft, left = capLeft.read()
 retCentre, centre = capCentre.read()
 retRight, right = capRight.read()
-#combined = imageStitching(left,centre)
-leftCentre = imageStitching(left,centre)
+leftCentre = imageStitching(centre,left)
 combined = imageStitching(leftCentre,right)
-cv2.imwrite("stitched.jpg",combined)
+cv2.imwrite(os.getcwd() + "/stitched_images/stitched.jpg",combined)
 
 
 
