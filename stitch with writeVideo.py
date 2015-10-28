@@ -229,10 +229,15 @@ def writeVideo():
     height , width, layers = combined.shape
     print width,height
     fourcc = cv2.cv.CV_FOURCC('m', 'p', '4','v')
-    video = cv2.VideoWriter("video.mov",fourcc,25,(width,height))
+    video = cv2.VideoWriter("video.avi",-1,1,(width,height))
     video.write(combined)
-    
-    while(capLeft.isOpened() and capCentre.isOpened() and capRight.isOpened()):
+    video.write(combined)
+    video.write(combined)
+    video.write(combined)
+    video.write(combined)
+
+    '''
+    while(capLeft.isOpened()):
         
         retLeft, left = capLeft.read()
         retCentre, centre = capCentre.read()
@@ -241,7 +246,7 @@ def writeVideo():
         combined = imageStitching(leftCentre,right)
         #cv2.imwrite(os.getcwd() + "/stitched.jpg",combined)
         video.write(combined)
-
+    '''
     capLeft.release()
     capCentre.release()
     capRight.release()
