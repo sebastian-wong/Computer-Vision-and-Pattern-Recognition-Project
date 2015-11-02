@@ -116,9 +116,13 @@ def imageStitching(img1,img2):
     # Use a SURF detector
     # Hessian Threshold at 5000
     detector = cv2.SURF()
+    #85
+    detector.hessianThreshold = 100
+    print detector.hessianThreshold
+    
+    
     # Finding key points in first image
     image1Features, image1Descs = detector.detectAndCompute(image1,None)
-    print image1Features
     # Parameters for nearest neighbour matching
     FLANN_INDEX_KDTREE = 1
     # Using Fast Approximate Nearest Neighbour Search Library
@@ -131,14 +135,18 @@ def imageStitching(img1,img2):
     
     # reduce image noise and detail
     image2GB = cv2.GaussianBlur(image2,(5,5),0)
+    #image2GB = image2
 
     # Finding key points in second image
     image2Features, image2Descs = detector.detectAndCompute(image2GB,None)
+    print "image2 features are: ", image2Features
+    print "image 2 descriptors are: ", image2Descs
     
     # Matching keypoints descriptors
     # Finding k best matches for each descriptor from a query set
     matches = matcher.knnMatch(image2Descs, trainDescriptors = image1Descs, k=2)
     print "Number of matches is ", len(matches)
+    print matches
     
     # Filtering close matches
     # indistinguisable
@@ -178,7 +186,7 @@ def imageStitching(img1,img2):
     # Maximum allowed reprojection error to treat a point pair as an inlier - 5
     # Levenberg-Marquardt method is also applied to reduce reprojection error
     homography, status = cv2.findHomography(points1,points2, cv2.RANSAC,5.0)
-    print '%d / %d  inliers/matched' % (np.sum(status), len(status))    
+    #print '%d / %d  inliers/matched' % (np.sum(status), len(status))    
     
     #inlierRatio = float(np.sum(status)) / float(len(status))
     
@@ -270,6 +278,10 @@ def imageStitching(img1,img2):
 capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mov")
 capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mov")
 capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mov")
+
+#capLeft = cv2.VideoCapture(os.getcwd() + "/Edited_Football_videos/left_camera.wmv")
+#capCentre = cv2.VideoCapture(os.getcwd() + "/Edited_Football_videos/centre_camera.wmv")
+#capRight = cv2.VideoCapture(os.getcwd() + "/Edited_Football_videos/right_camera.wmv")
 
 #For windows version
 #capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mp4")
