@@ -132,10 +132,13 @@ def getHomography(img1,img2):
     print '%d / %d  inliers/matched' % (np.sum(status), len(status))    
     #inlierRatio = float(np.sum(status)) / float(len(status))
     homography = homography/homography[2,2]
+    print homography
     return homography
     
-def stitching(image1,image2):
-    homography=getHomography(image1,image2)
+def stitching(image1,image2,homography):
+    # if (homography == None):
+    #         homography=getHomography(image1,image2)
+            
     homographyInverse = linalg.inv(homography)
     image2GB = cv2.GaussianBlur(image2,(5,5),0)
 
@@ -154,22 +157,22 @@ def stitching(image1,image2):
         moveH[1,2] += -minimumY
         maximumY += -minimumY
     
-    print "minimum points is ", (minimumX, minimumY)
-    print "Homography matrix is \n", homography
-    print "Inverse Homography matrix is \n", homographyInverse
+    #print "minimum points is ", (minimumX, minimumY)
+    #print "Homography matrix is \n", homography
+    #print "Inverse Homography matrix is \n", homographyInverse
             
     # updating parameters        
     newHomographyInverse = moveH*homographyInverse
     newWidth = int(math.ceil(maximumX))
     newHeight = int(math.ceil(maximumY))
     
-    print "new Inverse Homography matrix is \n", newHomographyInverse
-    print "new width and height is ", (newWidth,newHeight)
+    #print "new Inverse Homography matrix is \n", newHomographyInverse
+    #print "new width and height is ", (newWidth,newHeight)
     
     # Warping image1
-    warpedImage1 = cv2.warpPerspective(img1,moveH,(newWidth,newHeight))
+    warpedImage1 = cv2.warpPerspective(image1,moveH,(newWidth,newHeight))
     # Warping image2
-    warpedImage2 = cv2.warpPerspective(img2,newHomographyInverse,(newWidth,newHeight))
+    warpedImage2 = cv2.warpPerspective(image2,newHomographyInverse,(newWidth,newHeight))
     
     # Creating new palette for image1 with enlarged height and width
     enlargedImage1 = np.zeros((newHeight,newWidth,3), np.uint8)
@@ -218,36 +221,91 @@ def stitching(image1,image2):
     croppedFinalImage = finalImage[rectangle[1]:rectangle[1]+rectangle[3], rectangle[0]:rectangle[0]+rectangle[2]]
         
     return croppedFinalImage           
-        
 
+# given three videos and a time in seconds
+# return the left, centre, and right frame
+# of the video at the specified time
+def getFramesAtSpecificTime(seconds):
+    capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mov")
+    capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mov")
+    capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mov")
+    # Get total number of frames
+    frameCounts = int(capLeft.get(7))
+    print frameCounts
+    frameAtSpecifiedTime = int((frameCounts/(5*60.0)) * seconds)
+    # setting the next frame to be captured to be the frame at
+    # the given time
+    capLeft.set(cv.CV_CAP_PROP_POS_FRAMES,frameAtSpecifiedTime)
+    capCentre.set(cv.CV_CAP_PROP_POS_FRAMES,frameAtSpecifiedTime)
+    capRight.set(cv.CV_CAP_PROP_POS_FRAMES,frameAtSpecifiedTime)
+    retLeft, leftFrame = capLeft.read()
+    retCentre, centreFrame = capCentre.read()
+    retRight, rightFrame = capRight.read()
+    cv2.imwrite("leftFrame3min.jpg", leftFrame)
+    cv2.imwrite("centreFrame3min.jpg", centreFrame)
+    cv2.imwrite("rightFrame3min.jpg", rightFrame)
+    # setting next frame to be captured back to 1
+    capLeft.set(cv.CV_CAP_PROP_POS_FRAMES,1)
+    capCentre.set(cv.CV_CAP_PROP_POS_FRAMES,1)
+    capRight.set(cv.CV_CAP_PROP_POS_FRAMES,1)
+    capLeft.release()
+    capCentre.release()
+    capRight.release()
+    return leftFrame, centreFrame, rightFrame
+
+
+#selectedLeftFrame, selectedCentreFrame, selectedRightFrame = getFramesAtSpecificTime(180)
 capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mov")
 capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mov")
 capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mov")
-
-
-
 # Get total number of frames
 frameCounts = int(capLeft.get(7))
-print frameCounts
-#retLeft, left = capLeft.read()
-#retCentre, centre = capCentre.read()
-#retRight, right = capRight.read()
+# print frameCounts
+# Capturing the frame at the 3rd minute of the video
+# fps = total frames / 300 seconds
+# frame = fps + 180
+# setting frame to be captured as 4291
 capLeft.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
 capCentre.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
 capRight.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
 retLeft, left1 = capLeft.read()
 retCentre, centre1 = capCentre.read()
 retRight, right1 = capRight.read()
-     
 cv2.imwrite("leftFrame1.jpg", left1)
 cv2.imwrite("centreFrame1.jpg", centre1)
 cv2.imwrite("rightFrame1.jpg", right1)
+# calculating the homography for left and centre frame
+homographyLeftCentre = getHomography(centre1,left1)
+print "homographyLeftCentre is : "
+print homographyLeftCentre
+# stitching left and centre frame
+stitchedLeftCentre = stitching(centre1,left1,homographyLeftCentre)
+# calculating the homography for stitched frame and right frame
+homographyLeftCentreRight = getHomography(stitchedLeftCentre,right1)
+print "homographyLeftCentreRight is "
+print homographyLeftCentreRight
+stitchedLeftCentreRight = stitching(stitchedLeftCentre,right1,homographyLeftCentreRight)
+cv2.imwrite("leftcentre.jpg", stitchedLeftCentre)
+cv2.imwrite("leftcentreright.jpg",stitchedLeftCentreRight)
 
-leftCentre1 = stitching(centre1,left1)
-cv2.imwrite("leftcentre1.jpg", leftCentre1)
-combined1 = stitching(leftCentre1,right1)
-cv2.imwrite("stitched1.jpg",combined1)        
-#leftCentre = imageStitching(centre,left)
-#combined = imageStitching(leftCentre,right)
-#cv2.imwrite("stitched.jpg",combined)
+
+# #stitching video
+# for x in range(0, frameCounts):
+#     retLeft, left = capLeft.read()
+#     retCentre, centre = capCentre.read()
+#     retRight, right = capRight.read()
+#     combined1 = stitching(centre,left,homographyLeftCentre)
+#     combined2 = stitching(combined1,right,homographyCombinedRight)
+#     height , width, layers = combined2.shape
+#     if x%10 == 0:
+#         print x
+#     cv2.imwrite("test/video" + str(x) + ".jpg", combined2)
+#     fourcc = cv2.cv.CV_FOURCC('m', 'p', '4','v')
+#     video = cv2.VideoWriter("video.mov",fourcc,23,(width,height))
+#     video.write(combined2)
+
+
+
+    
+
 
