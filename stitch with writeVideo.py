@@ -7,46 +7,8 @@ from matplotlib import pyplot as plt
 
 from numpy import linalg
 
-refPt=[]
 
-def click_and_crop(event, x, y, flags, param):
-    # grab references to the global variables
-    # if the left mouse button was clicked, record the starting
-    # (x, y) coordinates and indicate that cropping is being
-    # performed
-    global refPt
-    if event == cv2.EVENT_LBUTTONDOWN:
-        print "left click recorded"
-        Pt = (x, y)
-        refPt.append(Pt)
-        print Pt
 
-        # draw a rectangle around the region of interest
-        #cv2.circle(img, refPt,2 , (0, 255, 0), 2)
-        #cv2.imshow("image", img)
-
-def getKeypoints(img):
-    clone = img.copy()
-    cv2.namedWindow("image",cv2.WINDOW_NORMAL)
-    cv2.setMouseCallback("image", click_and_crop)
-    flag=True 
-    # keep looping until the 'c' key is pressed
-    while flag:
-            # display the image and wait for a keypress
-        cv2.imshow("image", img)
-        key = cv2.waitKey(1) & 0xFF
-            # if the 'r' key is pressed, reset the cropping region
-        if key == ord("r"):
-            img = clone.copy()
-        if key == ord("u"):
-            img=cv2.pyrUp(img)
-        if key == ord("d"):
-            img=cv2.pyrDown(img)    
-            # if the 'c' key is pressed, break from the loop
-        elif key == ord("c"):
-            break
-    cv2.destroyAllWindows()
-            
 # Storing good matches according to Lowe's ratio test
 def filterMatches(matches, ratio = 0.75):
     filteredMatches = []
@@ -116,13 +78,9 @@ def imageStitching(img1,img2):
     # Use a SURF detector
     # Hessian Threshold at 5000
     detector = cv2.SURF()
-    #85
-    detector.hessianThreshold = 100
-    print detector.hessianThreshold
-    
-    
     # Finding key points in first image
     image1Features, image1Descs = detector.detectAndCompute(image1,None)
+    
     # Parameters for nearest neighbour matching
     FLANN_INDEX_KDTREE = 1
     # Using Fast Approximate Nearest Neighbour Search Library
@@ -135,23 +93,20 @@ def imageStitching(img1,img2):
     
     # reduce image noise and detail
     image2GB = cv2.GaussianBlur(image2,(5,5),0)
-    #image2GB = image2
 
     # Finding key points in second image
     image2Features, image2Descs = detector.detectAndCompute(image2GB,None)
-    print "image2 features are: ", image2Features
-    print "image 2 descriptors are: ", image2Descs
     
     # Matching keypoints descriptors
     # Finding k best matches for each descriptor from a query set
     matches = matcher.knnMatch(image2Descs, trainDescriptors = image1Descs, k=2)
     print "Number of matches is ", len(matches)
-    print matches
     
     # Filtering close matches
     # indistinguisable
     filteredMatches = filterMatches(matches)
     print "Number of good matches is ", len(filteredMatches)
+    
     distance = imageDistance(filteredMatches)
     print "Distance from image1 is " , distance
     
@@ -164,19 +119,6 @@ def imageStitching(img1,img2):
     for match in filteredMatches:
         keyPoints1.append(image1Features[match.trainIdx])
         keyPoints2.append(image2Features[match.queryIdx])
-
-    draw_params = dict(matchColor = (0,255,0),
-                       singlePointColor = (255,0,0),
-                       matchesMask = filteredMatches,
-                       flags = 0)
-
-    img3 = cv2.drawKeypoints(img1,keyPoints1,None,(255,0,0),4)
-
-    plt.imshow(img3),plt.show()
-    img4 = cv2.drawKeypoints(img2,keyPoints2,None,(255,0,0),4)
-
-    plt.imshow(img4),plt.show()
-
     
     points1 = np.array([k.pt for k in keyPoints1])
     points2 = np.array([k.pt for k in keyPoints2])
@@ -186,7 +128,7 @@ def imageStitching(img1,img2):
     # Maximum allowed reprojection error to treat a point pair as an inlier - 5
     # Levenberg-Marquardt method is also applied to reduce reprojection error
     homography, status = cv2.findHomography(points1,points2, cv2.RANSAC,5.0)
-    #print '%d / %d  inliers/matched' % (np.sum(status), len(status))    
+    print '%d / %d  inliers/matched' % (np.sum(status), len(status))    
     
     #inlierRatio = float(np.sum(status)) / float(len(status))
     
@@ -272,30 +214,71 @@ def imageStitching(img1,img2):
     # slicing    
     croppedFinalImage = finalImage[rectangle[1]:rectangle[1]+rectangle[3], rectangle[0]:rectangle[0]+rectangle[2]]
         
-    return croppedFinalImage        
+    return croppedFinalImage           
         
+def writeVideo():
+    capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mp4")
+    capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mp4")
+    capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mp4")
 
-capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mov")
-capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mov")
-capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mov")
+    retLeft, left = capLeft.read()
+    retCentre, centre = capCentre.read()
+    retRight, right = capRight.read()
+    leftCentre = imageStitching(centre,left)
+    combined = imageStitching(leftCentre,right)
+    height , width, layers = combined.shape
+    print width,height
+    fourcc = cv2.cv.CV_FOURCC('m', 'p', '4','v')
+    video = cv2.VideoWriter("video.avi",-1,1,(width,height))
+    video.write(combined)
+    video.write(combined)
+    video.write(combined)
+    video.write(combined)
+    video.write(combined)
 
-#capLeft = cv2.VideoCapture(os.getcwd() + "/Edited_Football_videos/left_camera.wmv")
-#capCentre = cv2.VideoCapture(os.getcwd() + "/Edited_Football_videos/centre_camera.wmv")
-#capRight = cv2.VideoCapture(os.getcwd() + "/Edited_Football_videos/right_camera.wmv")
+    '''
+    while(capLeft.isOpened()):
+        
+        retLeft, left = capLeft.read()
+        retCentre, centre = capCentre.read()
+        retRight, right = capRight.read()
+        leftCentre = imageStitching(centre,left)
+        combined = imageStitching(leftCentre,right)
+        #cv2.imwrite(os.getcwd() + "/stitched.jpg",combined)
+        video.write(combined)
+    '''
+    capLeft.release()
+    capCentre.release()
+    capRight.release()
+    video.release()
+    cv2.destroyAllWindows()
 
-#For windows version
-#capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mp4")
-#capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mp4")
-#capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mp4")
-
+    
+writeVideo()
+'''
 # Get total number of frames
 frameCounts = int(capLeft.get(7))
 retLeft, left = capLeft.read()
 retCentre, centre = capCentre.read()
 retRight, right = capRight.read()
-#Method for getting keypoints by clicking
-#kpts=getKeypoints(left)
-leftCentre= imageStitching(centre,left)
-combined= imageStitching(leftCentre,right)
-cv2.imwrite("stitched.jpg",combined)    
+leftCentre = imageStitching(centre,left)
+combined = imageStitching(leftCentre,right)
+cv2.imwrite(os.getcwd() + "/stitched.jpg",combined)
+
+height , width , layers =  combined.shape
+
+fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
+video = cv2.VideoWriter("video.avi",fourcc,1,(width,height),True)
+
+video.write(combined)
+video.write(combined)
+video.write(combined)
+
+capLeft.release()
+capCentre.release()
+capRight.release()
+video.release()
+
+cv2.destroyAllWindows()
+'''
 
