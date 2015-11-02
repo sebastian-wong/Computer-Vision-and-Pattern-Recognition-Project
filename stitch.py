@@ -79,7 +79,7 @@ def imageStitching(img1,img2):
     # Use a SURF detector
     # Hessian Threshold at 5000
     detector = cv2.SURF()
-    detector.hessianThreshold = 1000
+    detector.hessianThreshold = 2500
     # Finding key points in first image
     image1Features, image1Descs = detector.detectAndCompute(image1,None)
     
