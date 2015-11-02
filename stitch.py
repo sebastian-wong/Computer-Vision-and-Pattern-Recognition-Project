@@ -134,75 +134,11 @@ def getHomography(img1,img2):
     homography = homography/homography[2,2]
     return homography
     
-# stitch image1 and image2
-def imageStitching(img1,img2):
-    
-    # Convert to grayscale for processing
-    image1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-    image2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-    
-    # Use a SURF detector
-    # Hessian Threshold at 5000
-    detector = cv2.SURF()
-    detector.hessianThreshold = 2500
-    # Finding key points in first image
-    image1Features, image1Descs = detector.detectAndCompute(image1,None)
-    
-    # Parameters for nearest neighbour matching
-    FLANN_INDEX_KDTREE = 1
-    # Using Fast Approximate Nearest Neighbour Search Library
-    flann_params = dict(algorithm = FLANN_INDEX_KDTREE,trees = 5)
-    # Specifies number of times the trees in the index should be recursively
-    # traversed.
-    # Higher values has greater precision
-    search_params = dict(checks=50)    
-    matcher = cv2.FlannBasedMatcher(flann_params,search_params)
-    
-    # reduce image noise and detail
+def stitching(image1,image2):
+    homography=getHomography(image1,image2)
+    homographyInverse = linalg.inv(homography)
     image2GB = cv2.GaussianBlur(image2,(5,5),0)
 
-    # Finding key points in second image
-    image2Features, image2Descs = detector.detectAndCompute(image2GB,None)
-    
-    # Matching keypoints descriptors
-    # Finding k best matches for each descriptor from a query set
-    matches = matcher.knnMatch(image2Descs, trainDescriptors = image1Descs, k=2)
-    print "Number of matches is ", len(matches)
-    
-    # Filtering close matches
-    # indistinguisable
-    filteredMatches = filterMatches(matches)
-    print "Number of good matches is ", len(filteredMatches)
-    
-    distance = imageDistance(filteredMatches)
-    print "Distance from image1 is " , distance
-    
-    averageDistance = distance/float(len(filteredMatches))
-    print "Average Distance is ", averageDistance
-    
-    keyPoints1 = []
-    keyPoints2 = []
-    
-    for match in filteredMatches:
-        keyPoints1.append(image1Features[match.trainIdx])
-        keyPoints2.append(image2Features[match.queryIdx])
-    
-    points1 = np.array([k.pt for k in keyPoints1])
-    points2 = np.array([k.pt for k in keyPoints2])
-    
-    # finds perspective transformation between two planes
-    # use Random sample consensus (RANSAC) based method
-    # Maximum allowed reprojection error to treat a point pair as an inlier - 5
-    # Levenberg-Marquardt method is also applied to reduce reprojection error
-    homography, status = cv2.findHomography(points1,points2, cv2.RANSAC,5.0)
-    print '%d / %d  inliers/matched' % (np.sum(status), len(status))    
-    
-    #inlierRatio = float(np.sum(status)) / float(len(status))
-    
-    homography = homography/homography[2,2]
-    homographyInverse = linalg.inv(homography)
-    
-    
     (minimumX, minimumY, maximumX, maximumY) = findDimensions(image2GB, homographyInverse)
     
     # Adjust maximum x and y by image1 size
@@ -307,9 +243,9 @@ cv2.imwrite("leftFrame1.jpg", left1)
 cv2.imwrite("centreFrame1.jpg", centre1)
 cv2.imwrite("rightFrame1.jpg", right1)
 
-leftCentre1 = imageStitching(centre1,left1)
+leftCentre1 = stitching(centre1,left1)
 cv2.imwrite("leftcentre1.jpg", leftCentre1)
-combined1 = imageStitching(leftCentre1,right1)
+combined1 = stitching(leftCentre1,right1)
 cv2.imwrite("stitched1.jpg",combined1)        
 #leftCentre = imageStitching(centre,left)
 #combined = imageStitching(leftCentre,right)
