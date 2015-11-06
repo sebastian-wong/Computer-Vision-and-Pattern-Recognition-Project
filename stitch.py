@@ -219,8 +219,8 @@ def stitching(image1,image2,homography):
             
     # slicing    
     croppedFinalImage = finalImage[rectangle[1]:rectangle[1]+rectangle[3], rectangle[0]:rectangle[0]+rectangle[2]]
-        
-    return croppedFinalImage           
+    cv2.imwrite("cropped.jpg", croppedFinalImage)
+    return croppedFinalImage,moveH,homographyInverse          
 
 # given three videos and a time in seconds
 # return the left, centre, and right frame
@@ -255,9 +255,9 @@ def getFramesAtSpecificTime(seconds):
 
 
 #selectedLeftFrame, selectedCentreFrame, selectedRightFrame = getFramesAtSpecificTime(180)
-capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mov")
-capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mov")
-capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mov")
+capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mp4")
+capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mp4")
+capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mp4")
 # Get total number of frames
 frameCounts = int(capLeft.get(7))
 # print frameCounts
@@ -279,16 +279,18 @@ homographyLeftCentre = getHomography(centre1,left1)
 print "homographyLeftCentre is : "
 print homographyLeftCentre
 # stitching left and centre frame
-stitchedLeftCentre = stitching(centre1,left1,homographyLeftCentre)
+stitchedLeftCentre,translation1,homoInv1 = stitching(centre1,left1,homographyLeftCentre)
 # calculating the homography for stitched frame and right frame
 homographyLeftCentreRight = getHomography(stitchedLeftCentre,right1)
 print "homographyLeftCentreRight is "
 print homographyLeftCentreRight
-stitchedLeftCentreRight = stitching(stitchedLeftCentre,right1,homographyLeftCentreRight)
+stitchedLeftCentreRight,translation2,homoInv2 = stitching(stitchedLeftCentre,right1,homographyLeftCentreRight)
 cv2.imwrite("leftcentre.jpg", stitchedLeftCentre)
 cv2.imwrite("leftcentreright.jpg",stitchedLeftCentreRight)
 
 
+finalImg=stitchedLeftCentreRight[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre1[:,0])]
+cv2.imwrite("final.jpg",finalImg)
 # #stitching video
 # for x in range(0, frameCounts):
 #     retLeft, left = capLeft.read()
@@ -303,9 +305,3 @@ cv2.imwrite("leftcentreright.jpg",stitchedLeftCentreRight)
 #     fourcc = cv2.cv.CV_FOURCC('m', 'p', '4','v')
 #     video = cv2.VideoWriter("video.mov",fourcc,23,(width,height))
 #     video.write(combined2)
-
-
-
-    
-
-
