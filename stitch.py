@@ -321,33 +321,38 @@ stitchedLeftCentre,translation1,homoInv1 = stitching(centre,left,homographyLeftC
 homographyLeftCentreRight = getHomography(stitchedLeftCentre,right)
 print "homographyLeftCentreRight is "
 print homographyLeftCentreRight
-stitchedLeftCentreRight,translation2,homoInv2 = stitching(stitchedLeftCentre,right1,homographyLeftCentreRight)
+stitchedLeftCentreRight,translation2,homoInv2 = stitching(stitchedLeftCentre,right,homographyLeftCentreRight)
 cv2.imwrite("leftcentre.jpg", stitchedLeftCentre)
 cv2.imwrite("leftcentreright.jpg",stitchedLeftCentreRight)
 # Method to cut vertical sides
 # getKeypoints(finalImg)
 # points=map(itemgetter(0),refPt)
-finalImg=stitchedLeftCentreRight[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre1[:,0]),775:10579]
+finalImg=stitchedLeftCentreRight[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre[:,0]),775:10579]
 cv2.imwrite("final.jpg",finalImg)
+height, width, channels = finalImg.shape
 
-height , width, layers = finalImg.shape
-# fourcc = cv2.cv.CV_FOURCC('m', 'p', '4','v')
-# video = cv2.VideoWriter("video.mov",fourcc,23,(1028,720))
 #
+# fourcc = cv2.cv.CV_FOURCC('8', 'B', 'P','S')
+# video = cv2.VideoWriter("video.mov",fourcc,16,(1041,120),True)
 #
+# # 9369 width
+# # 1080 height
 # #stitching video
-# for x in range(0, 300):
+# for x in range(0, 100):
 #     retLeft, left = capLeft.read()
 #     retCentre, centre = capCentre.read()
 #     retRight, right = capRight.read()
 #     combined1,_,_ = stitching(centre,left,homographyLeftCentre)
 #     combined2,__,__ = stitching(combined1,right,homographyLeftCentreRight)
-#     finalImg = combined2[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre1[:,0]),775:10579]
-#     resize = cv2.resize(finalImg,(1028,720))
+#     finalImg = combined2[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre[:,0]),775:10579]
+#     resize = cv2.resize(finalImg,(1041,120))
 #     if x%10 == 0:
 #         print x
-#     cv2.imwrite("test/video" + str(x) + ".jpg", finalImg)
 #     video.write(resize)
+# capLeft.release()
+# capCentre.release()
+# capRight.release()
+# video.release()
 
 
 
@@ -362,13 +367,6 @@ height , width, layers = finalImg.shape
 
 
 
-
-
-
-
-
-
-# height, width, channels = finalImg.shape
 # # convert to uint16
 # # final = np.array(finalImg,dtype = np.uint16)
 # # final *= 256
@@ -388,5 +386,11 @@ height , width, layers = finalImg.shape
 # cv2.imwrite("corrected.jpg", correctedImage)
 # correctedImage1 = cv2.cvtColor(correctedImage, cv2.COLOR_YCR_CB2BGR)
 # cv2.imwrite("corrected1.jpg", correctedImage1)
+
+
+
+
+
+
 
 
