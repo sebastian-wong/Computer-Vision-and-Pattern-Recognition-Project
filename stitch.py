@@ -168,10 +168,7 @@ def getHomography(img1,img2):
     print homography
     return homography
     
-def stitching(image1,image2,homography):
-    # if (homography == None):
-    #         homography=getHomography(image1,image2)
-            
+def stitching(image1,image2,homography):     
     homographyInverse = linalg.inv(homography)
     image2GB = cv2.GaussianBlur(image2,(5,5),0)
 
@@ -243,13 +240,11 @@ def stitching(image1,image2,homography):
         height = yPrime - y
         width = xPrime - x
         area = height * width
-        
         # accounting for cases whereby there are
         # negative height and width
         if (area > maximumArea and height > 0 and width > 0):
             maximumArea = area
             rectangle = (x,y,xPrime,yPrime)
-            
     # slicing    
     croppedFinalImage = finalImage[rectangle[1]:rectangle[1]+rectangle[3], rectangle[0]:rectangle[0]+rectangle[2]]
     cv2.imwrite("cropped.jpg", croppedFinalImage)
@@ -294,8 +289,8 @@ def histogramEqualization(stitchedImage):
     cdf = np.ma.filled(cdfMasked,0).astype(np.uint8)
     imgEqualized = cdf[stitchedImage]
     return imgEqualized
-
-
+    
+    
 #selectedLeftFrame, selectedCentreFrame, selectedRightFrame = getFramesAtSpecificTime(180)
 capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mov")
 capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mov")
@@ -310,67 +305,88 @@ frameCounts = int(capLeft.get(7))
 capLeft.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
 capCentre.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
 capRight.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
-retLeft, left1 = capLeft.read()
-retCentre, centre1 = capCentre.read()
-retRight, right1 = capRight.read()
-cv2.imwrite("leftFrame1.jpg", left1)
-cv2.imwrite("centreFrame1.jpg", centre1)
-cv2.imwrite("rightFrame1.jpg", right1)
+retLeft, left = capLeft.read()
+retCentre, centre = capCentre.read()
+retRight, right = capRight.read()
+# cv2.imwrite("leftFrame1.jpg", left1)
+# cv2.imwrite("centreFrame1.jpg", centre1)
+# cv2.imwrite("rightFrame1.jpg", right1)
 # calculating the homography for left and centre frame
-homographyLeftCentre = getHomography(centre1,left1)
+homographyLeftCentre = getHomography(centre,left)
 print "homographyLeftCentre is : "
 print homographyLeftCentre
 # stitching left and centre frame
-stitchedLeftCentre,translation1,homoInv1 = stitching(centre1,left1,homographyLeftCentre)
+stitchedLeftCentre,translation1,homoInv1 = stitching(centre,left,homographyLeftCentre)
 # calculating the homography for stitched frame and right frame
-homographyLeftCentreRight = getHomography(stitchedLeftCentre,right1)
+homographyLeftCentreRight = getHomography(stitchedLeftCentre,right)
 print "homographyLeftCentreRight is "
 print homographyLeftCentreRight
 stitchedLeftCentreRight,translation2,homoInv2 = stitching(stitchedLeftCentre,right1,homographyLeftCentreRight)
 cv2.imwrite("leftcentre.jpg", stitchedLeftCentre)
 cv2.imwrite("leftcentreright.jpg",stitchedLeftCentreRight)
-cv2.imwrite("test.jpg", stitchedLeftCentre) 
 # Method to cut vertical sides
 # getKeypoints(finalImg)
 # points=map(itemgetter(0),refPt)
 finalImg=stitchedLeftCentreRight[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre1[:,0]),775:10579]
 cv2.imwrite("final.jpg",finalImg)
 
-height, width, channels = finalImg.shape
-# convert to uint16
-# final = np.array(finalImg,dtype = np.uint16)
-# final *= 256
-YCbCrImage = cv2.cvtColor(finalImg, cv2.COLOR_BGR2YCR_CB)
-#cv2.imwrite("ycbcr.jpg", YCbCrImage)
-yImage = YCbCrImage[:,:,0]
-cbImage = YCbCrImage[:,:,1]
-crImage = YCbCrImage[:,:,2]
-correctedYImage = histogramEqualization(yImage)
-correctedCbImage = histogramEqualization(cbImage)
-correctedCrImage = histogramEqualization(crImage)
-correctedImage = np.zeros([height,width,channels])
-correctedImage[:,:,0] = correctedYImage
-correctedImage[:,:,1] = correctedCbImage
-correctedImage[:,:,2] = correctedCrImage
-# correctedImage /= 256
-cv2.imwrite("corrected.jpg", correctedImage)
-correctedImage1 = cv2.cvtColor(correctedImage, cv2.COLOR_YCR_CB2BGR)
-cv2.imwrite("corrected1.jpg", correctedImage1)
-
-
-
-
+height , width, layers = finalImg.shape
+# fourcc = cv2.cv.CV_FOURCC('m', 'p', '4','v')
+# video = cv2.VideoWriter("video.mov",fourcc,23,(1028,720))
+#
+#
 # #stitching video
-# for x in range(0, frameCounts):
+# for x in range(0, 300):
 #     retLeft, left = capLeft.read()
 #     retCentre, centre = capCentre.read()
 #     retRight, right = capRight.read()
-#     combined1 = stitching(centre,left,homographyLeftCentre)
-#     combined2 = stitching(combined1,right,homographyCombinedRight)
-#     height , width, layers = combined2.shape
+#     combined1,_,_ = stitching(centre,left,homographyLeftCentre)
+#     combined2,__,__ = stitching(combined1,right,homographyLeftCentreRight)
+#     finalImg = combined2[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre1[:,0]),775:10579]
+#     resize = cv2.resize(finalImg,(1028,720))
 #     if x%10 == 0:
 #         print x
-#     cv2.imwrite("test/video" + str(x) + ".jpg", combined2)
-#     fourcc = cv2.cv.CV_FOURCC('m', 'p', '4','v')
-#     video = cv2.VideoWriter("video.mov",fourcc,23,(width,height))
-#     video.write(combined2)
+#     cv2.imwrite("test/video" + str(x) + ".jpg", finalImg)
+#     video.write(resize)
+
+
+
+
+
+
+
+# # warping
+# birdEyeHomography, birdEyeStatus = cv2.findHomography(birdEyeCorners,fieldCorners,0)
+# print birdEyeHomography
+# newLayout = cv2.warpPerspective()
+
+
+
+
+
+
+
+
+
+# height, width, channels = finalImg.shape
+# # convert to uint16
+# # final = np.array(finalImg,dtype = np.uint16)
+# # final *= 256
+# YCbCrImage = cv2.cvtColor(finalImg, cv2.COLOR_BGR2YCR_CB)
+# #cv2.imwrite("ycbcr.jpg", YCbCrImage)
+# yImage = YCbCrImage[:,:,0]
+# cbImage = YCbCrImage[:,:,1]
+# crImage = YCbCrImage[:,:,2]
+# correctedYImage = histogramEqualization(yImage)
+# correctedCbImage = histogramEqualization(cbImage)
+# correctedCrImage = histogramEqualization(crImage)
+# correctedImage = np.zeros([height,width,channels])
+# correctedImage[:,:,0] = correctedYImage
+# correctedImage[:,:,1] = correctedCbImage
+# correctedImage[:,:,2] = correctedCrImage
+# # correctedImage /= 256
+# cv2.imwrite("corrected.jpg", correctedImage)
+# correctedImage1 = cv2.cvtColor(correctedImage, cv2.COLOR_YCR_CB2BGR)
+# cv2.imwrite("corrected1.jpg", correctedImage1)
+
+
