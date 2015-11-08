@@ -5,10 +5,12 @@ import numpy as np
 import cv2
 import cv2.cv as cv
 from matplotlib import pyplot as plt
+from operator import itemgetter
 
 from numpy import linalg
 
 
+refPt=[]
 
 # Storing good matches according to Lowe's ratio test
 def filterMatches(matches, ratio = 0.75):
@@ -17,6 +19,37 @@ def filterMatches(matches, ratio = 0.75):
         if len(m) == 2 and m[0].distance < m[1].distance * ratio:
             filteredMatches.append(m[0])
     return filteredMatches
+
+def click_and_crop(event, x, y, flags, param):
+    # grab references to the global variables
+    # if the left mouse button was clicked, record the starting
+    # (x, y) coordinates and indicate that cropping is being
+    # performed
+    global refPt
+    if event == cv2.EVENT_LBUTTONDOWN:
+        print "left click recorded"
+        Pt = (x, y)
+        refPt.append(Pt)
+        print Pt
+
+def getKeypoints(img):
+    clone = img.copy()
+    cv2.namedWindow("image",cv2.WINDOW_NORMAL)
+    cv2.setMouseCallback("image", click_and_crop)
+    flag=True 
+    # keep looping until the 'c' key is pressed
+    while flag:
+            # display the image and wait for a keypress
+        cv2.imshow("image", img)
+        key = cv2.waitKey(1) & 0xFF
+            # if the 'r' key is pressed, reset the cropping region
+        if key == ord("r"):
+            img = clone.copy()
+            # if the 'c' key is pressed, break from the loop
+        elif key == ord("c"):
+            break
+    cv2.destroyAllWindows()
+
 
 def imageDistance(matches):
     sumDistance = 0.0
@@ -288,8 +321,12 @@ stitchedLeftCentreRight,translation2,homoInv2 = stitching(stitchedLeftCentre,rig
 cv2.imwrite("leftcentre.jpg", stitchedLeftCentre)
 cv2.imwrite("leftcentreright.jpg",stitchedLeftCentreRight)
 
+cv2.imwrite("test.jpg", stitchedLeftCentre) 
 
-finalImg=stitchedLeftCentreRight[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre1[:,0])]
+#Method to cut vertical sides
+#getKeypoints(finalImg)
+#points=map(itemgetter(0),refPt)
+finalImg=stitchedLeftCentreRight[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre1[:,0]),775:10579]
 cv2.imwrite("final.jpg",finalImg)
 # #stitching video
 # for x in range(0, frameCounts):
