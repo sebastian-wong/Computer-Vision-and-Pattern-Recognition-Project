@@ -286,11 +286,20 @@ def getFramesAtSpecificTime(seconds):
     capRight.release()
     return leftFrame, centreFrame, rightFrame
 
+def histogramEqualization(stitchedImage):
+    hist,bins = np.histogram(stitchedImage.flatten(),256,[0,256])
+    cdf = hist.cumsum()
+    cdfMasked = np.ma.masked_equal(cdf,0)
+    cdfMasked = (cdfMasked - cdfMasked.min())*255/(cdfMasked.max()-cdfMasked.min())
+    cdf = np.ma.filled(cdfMasked,0).astype(np.uint8)
+    imgEqualized = cdf[stitchedImage]
+    return imgEqualized
+
 
 #selectedLeftFrame, selectedCentreFrame, selectedRightFrame = getFramesAtSpecificTime(180)
-capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mp4")
-capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mp4")
-capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mp4")
+capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mov")
+capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mov")
+capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mov")
 # Get total number of frames
 frameCounts = int(capLeft.get(7))
 # print frameCounts
@@ -320,14 +329,37 @@ print homographyLeftCentreRight
 stitchedLeftCentreRight,translation2,homoInv2 = stitching(stitchedLeftCentre,right1,homographyLeftCentreRight)
 cv2.imwrite("leftcentre.jpg", stitchedLeftCentre)
 cv2.imwrite("leftcentreright.jpg",stitchedLeftCentreRight)
-
 cv2.imwrite("test.jpg", stitchedLeftCentre) 
-
-#Method to cut vertical sides
-#getKeypoints(finalImg)
-#points=map(itemgetter(0),refPt)
+# Method to cut vertical sides
+# getKeypoints(finalImg)
+# points=map(itemgetter(0),refPt)
 finalImg=stitchedLeftCentreRight[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre1[:,0]),775:10579]
 cv2.imwrite("final.jpg",finalImg)
+
+height, width, channels = finalImg.shape
+# convert to uint16
+# final = np.array(finalImg,dtype = np.uint16)
+# final *= 256
+YCbCrImage = cv2.cvtColor(finalImg, cv2.COLOR_BGR2YCR_CB)
+#cv2.imwrite("ycbcr.jpg", YCbCrImage)
+yImage = YCbCrImage[:,:,0]
+cbImage = YCbCrImage[:,:,1]
+crImage = YCbCrImage[:,:,2]
+correctedYImage = histogramEqualization(yImage)
+correctedCbImage = histogramEqualization(cbImage)
+correctedCrImage = histogramEqualization(crImage)
+correctedImage = np.zeros([height,width,channels])
+correctedImage[:,:,0] = correctedYImage
+correctedImage[:,:,1] = correctedCbImage
+correctedImage[:,:,2] = correctedCrImage
+# correctedImage /= 256
+cv2.imwrite("corrected.jpg", correctedImage)
+correctedImage1 = cv2.cvtColor(correctedImage, cv2.COLOR_YCR_CB2BGR)
+cv2.imwrite("corrected1.jpg", correctedImage1)
+
+
+
+
 # #stitching video
 # for x in range(0, frameCounts):
 #     retLeft, left = capLeft.read()
