@@ -289,36 +289,40 @@ def histogramEqualization(stitchedImage):
     cdf = np.ma.filled(cdfMasked,0).astype(np.uint8)
     imgEqualized = cdf[stitchedImage]
     return imgEqualized
-    
-    
+ 
+
+# Calibrated homography values
+homographyLeftCentre = np.array([[4.08596402e-01,-1.90538213e-01,1.59402435e+03],[1.20408270e-02,9.67703126e-01,5.57990291e+01],[-3.15819648e-04,2.11969594e-05,1.00000000e+00]])
+homographyLeftCentre = np.matrix(homographyLeftCentre)
+homographyLeftCentreInverse = linalg.inv(homographyLeftCentre)
+homographyLeftCentreRight = np.array([[-9.71210737e-01,-1.12769933e-01,5.30469462e+03],[-8.56155949e-02,-9.03920581e-01,5.42435642e+02],[-3.39432036e-04,-1.53539758e-05,1.00000000e+00]])
+homographyLeftCentreRight = np.matrix(homographyLeftCentreRight) 
+homographyLeftCentreRightInverse = linalg.inv(homographyLeftCentreRight)  
 #selectedLeftFrame, selectedCentreFrame, selectedRightFrame = getFramesAtSpecificTime(180)
-capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mov")
-capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mov")
-capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mov")
+capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mp4")
+capCentre = cv2.VideoCapture(os.getcwd() + "/their_football_videos/centre_camera.mp4")
+capRight = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mp4")
 # Get total number of frames
+# Mac = 7151/mov, PC = 7200/mp4
 frameCounts = int(capLeft.get(7))
-# print frameCounts
 # Capturing the frame at the 3rd minute of the video
 # fps = total frames / 300 seconds
-# frame = fps + 180
-# setting frame to be captured as 4291
-capLeft.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
-capCentre.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
-capRight.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
+# frame = fps * 180
+# set frame to be captured at 4291 (Mac), 4344(Windows)
+# capLeft.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
+# capCentre.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
+# capRight.set(cv.CV_CAP_PROP_POS_FRAMES,4291)
 retLeft, left = capLeft.read()
 retCentre, centre = capCentre.read()
 retRight, right = capRight.read()
-# cv2.imwrite("leftFrame1.jpg", left1)
-# cv2.imwrite("centreFrame1.jpg", centre1)
-# cv2.imwrite("rightFrame1.jpg", right1)
 # calculating the homography for left and centre frame
-homographyLeftCentre = getHomography(centre,left)
+# homographyLeftCentre = getHomography(centre,left)
 print "homographyLeftCentre is : "
 print homographyLeftCentre
 # stitching left and centre frame
 stitchedLeftCentre,translation1,homoInv1 = stitching(centre,left,homographyLeftCentre)
 # calculating the homography for stitched frame and right frame
-homographyLeftCentreRight = getHomography(stitchedLeftCentre,right)
+# homographyLeftCentreRight = getHomography(stitchedLeftCentre,right)
 print "homographyLeftCentreRight is "
 print homographyLeftCentreRight
 stitchedLeftCentreRight,translation2,homoInv2 = stitching(stitchedLeftCentre,right,homographyLeftCentreRight)
@@ -331,28 +335,31 @@ finalImg=stitchedLeftCentreRight[translation1[1,2]+translation2[1,2]:translation
 cv2.imwrite("final.jpg",finalImg)
 height, width, channels = finalImg.shape
 
-#
-# fourcc = cv2.cv.CV_FOURCC('8', 'B', 'P','S')
-# video = cv2.VideoWriter("video.mov",fourcc,16,(1041,120),True)
-#
-# # 9369 width
-# # 1080 height
-# #stitching video
-# for x in range(0, 100):
-#     retLeft, left = capLeft.read()
-#     retCentre, centre = capCentre.read()
-#     retRight, right = capRight.read()
-#     combined1,_,_ = stitching(centre,left,homographyLeftCentre)
-#     combined2,__,__ = stitching(combined1,right,homographyLeftCentreRight)
-#     finalImg = combined2[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre[:,0]),775:10579]
-#     resize = cv2.resize(finalImg,(1041,120))
-#     if x%10 == 0:
-#         print x
-#     video.write(resize)
-# capLeft.release()
-# capCentre.release()
-# capRight.release()
-# video.release()
+# Initialising video writer
+# High definition codex used
+fourcc = cv2.cv.CV_FOURCC('D', 'I', 'V','X')
+video = cv2.VideoWriter("stitchedVideo.avi",fourcc,24,(4902,540),True)
+capLeft.set(cv.CV_CAP_PROP_POS_FRAMES,0)
+capCentre.set(cv.CV_CAP_PROP_POS_FRAMES,0)
+capRight.set(cv.CV_CAP_PROP_POS_FRAMES,0)
+# 9369(Mac/mov), 9804(Windows/mp4) width
+# 1080 (both) height
+#stitching video
+for x in range(0, frameCounts):
+    retLeft, left = capLeft.read()
+    retCentre, centre = capCentre.read()
+    retRight, right = capRight.read()
+    combined1,_,_ = stitching(centre,left,homographyLeftCentre)
+    combined2,__,__ = stitching(combined1,right,homographyLeftCentreRight)
+    finalImg = combined2[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre[:,0]),775:10579]
+    resize = cv2.resize(finalImg,(4902,540))
+    if x%10 == 0:
+        print x
+    video.write(resize)
+capLeft.release()
+capCentre.release()
+capRight.release()
+video.release()
 
 
 
