@@ -294,14 +294,10 @@ def histogramEqualization(stitchedImage):
 # Calibrated homography values
 # first good left
 homographyLeftCentre = np.array([[4.08596402e-01,-1.90538213e-01,1.59402435e+03],[1.20408270e-02,9.67703126e-01,5.57990291e+01],[-3.15819648e-04,2.11969594e-05,1.00000000e+00]])
-# second good left
-# homographyLeftCentre = np.array([[3.86263441e-01,-2.09435720e-01,1.59375300e+03],[1.08215489e-02,9.54260188e-01,5.62300352e+01],[-3.29649683e-04,1.19431205e-05,1.00000000e+00]])
-
-# homographyLeftCentre = np.matrix(homographyLeftCentre)
+homographyLeftCentre = np.matrix(homographyLeftCentre)
 # homographyLeftCentreInverse = linalg.inv(homographyLeftCentre)
-
 homographyLeftCentreRight = np.array([[-1.29792062e+00,-1.48633898e-01,7.08595564e+03],[-7.53004129e-02,-1.22009449e+00,5.07314628e+02],[-3.96593862e-04,-1.24223556e-05,1.00000000e+00]])
-# homographyLeftCentreRight = np.matrix(homographyLeftCentreRight) 
+homographyLeftCentreRight = np.matrix(homographyLeftCentreRight) 
 # homographyLeftCentreRightInverse = linalg.inv(homographyLeftCentreRight)  
 
 capLeft = cv2.VideoCapture(os.getcwd() + "/their_football_videos/left_camera.mp4")
@@ -314,7 +310,7 @@ frameCounts = int(capLeft.get(7))
 # fps = total frames / 300 seconds
 # frame = fps * 180
 # set frame to be captured at 4291 (Mac), 4344(Windows)
-i = 4320
+i = 624
 capLeft.set(cv.CV_CAP_PROP_POS_FRAMES,i)
 capCentre.set(cv.CV_CAP_PROP_POS_FRAMES,i)
 capRight.set(cv.CV_CAP_PROP_POS_FRAMES,i)
@@ -351,24 +347,22 @@ capCentre.set(cv.CV_CAP_PROP_POS_FRAMES,0)
 capRight.set(cv.CV_CAP_PROP_POS_FRAMES,0)
 # 9369(Mac/mov), 9804(Windows/mp4) width
 # 1080 (both) height
-
-
-#stitching video
-# for x in range(0, frameCounts):
-#     retLeft, left = capLeft.read()
-#     retCentre, centre = capCentre.read()
-#     retRight, right = capRight.read()
-#     combined1,_,_ = stitching(centre,left,homographyLeftCentre)
-#     combined2,__,__ = stitching(combined1,right,homographyLeftCentreRight)
-#     finalImg = combined2[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre[:,0]),775:10579]
-#     resize = cv2.resize(finalImg,(4902,540))
-#     if x%10 == 0:
-#         print x
-#     video.write(resize)
-# capLeft.release()
-# capCentre.release()
-# capRight.release()
-# video.release()
+# stitching video
+for x in range(0, frameCounts):
+    retLeft, left = capLeft.read()
+    retCentre, centre = capCentre.read()
+    retRight, right = capRight.read()
+    combined1,_,_ = stitching(centre,left,homographyLeftCentre)
+    combined2,__,__ = stitching(combined1,right,homographyLeftCentreRight)
+    finalImg = combined2[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre[:,0]),775:10579]
+    resize = cv2.resize(finalImg,(4902,540))
+    if x%10 == 0:
+        print x
+    video.write(resize)
+capLeft.release()
+capCentre.release()
+capRight.release()
+video.release()
 
 
 
