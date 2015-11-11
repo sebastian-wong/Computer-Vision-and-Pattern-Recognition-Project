@@ -332,9 +332,11 @@ stitchedLeftCentreRight,translation2,homoInv2 = stitching(stitchedLeftCentre,rig
 cv2.imwrite("leftcentre.jpg", stitchedLeftCentre)
 cv2.imwrite("leftcentreright.jpg",stitchedLeftCentreRight)
 # Method to cut vertical sides
-# getKeypoints(finalImg)
+#getKeypoints(finalImg)
 # points=map(itemgetter(0),refPt)
-finalImg=stitchedLeftCentreRight[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre[:,0]),775:10579]
+#new measurements
+finalImg=stitchedLeftCentreRight[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre[:,0]),502:9358]
+
 cv2.imwrite("final.jpg",finalImg)
 height, width, channels = finalImg.shape
 
