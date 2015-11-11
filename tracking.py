@@ -2,43 +2,66 @@ import os
 import numpy as np
 import cv2
 
-def find_if_close(cnt1,cnt2):
-    row1,row2 = cnt1.shape[0],cnt2.shape[0]
-    for i in xrange(row1):
-        for j in xrange(row2):
-            dist = np.linalg.norm(cnt1[i]-cnt2[j])
-            if abs(dist) < 10 :
-                return True
-            elif i==row1-1 and j==row2-1:
-                return False
+##def find_if_close(cnt1,cnt2):
+##    row1,row2 = cnt1.shape[0],cnt2.shape[0]
+##    for i in xrange(row1):
+##        for j in xrange(row2):
+##            dist = np.linalg.norm(cnt1[i]-cnt2[j])
+##            if abs(dist) < 10 :
+##                return True
+##            elif i==row1-1 and j==row2-1:
+##                return False
 
-cap = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mp4")
-firstFrame = cv2.imread(os.getcwd()+ "/bg.jpg")
+cap = cv2.VideoCapture(os.getcwd() + "/stitchedVideo.avi")
+firstFrame = cv2.imread(os.getcwd()+ "/background.jpg")
 
 lower_blue = np.array([110,50,50])
 upper_blue = np.array([130,255,255])
 lower_red = np.array([0,140,110])
 upper_red = np.array([20,200,255])
-for i in range (0,50):
+lower_white = np.array([100,100,100])
+upper_white = np.array([255,255,255])
+
+cv2.namedWindow("Final", 0)
+cv2.resizeWindow("Final", 1200,500)
+mask = np.ones(firstFrame.shape[:2], dtype="uint8") * 255
+for i in range (0,100):
     _,frame = cap.read()
-    frame = cv2.GaussianBlur(frame,(5,5),0)
+
+    #frame = cv2.GaussianBlur(frame,(5,5),0)
+    diff = cv2.absdiff(firstFrame,frame)
+    diff = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
+    #diff=cv2.bitwise_and(firstFrame,frame,frame)
+    #image = cv2.cvtColor(diff, cv2.COLOR_HSV2BGR)
+    #cv2.imshow("Final",diff)
+    #cv2.waitKey(30)
+    #res = cv2.bitwise_and(frame,frame,diff)
+    #lower_reso = cv2.pyrDown(frame)
+    #frame = cv2.GaussianBlur(frame,(5,5),0)
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     #find blue players
     mask = cv2.inRange(hsv, lower_blue, upper_blue)
     res = cv2.bitwise_and(frame,frame, mask=mask)
+    #mask = cv2.inRange(hsv, lower_white, upper_white)
+    #res = cv2.bitwise_and(frame,frame, mask=mask)
+    #cv2.imshow("Ball", res)
+    #cv2.waitKey(30)
     image = cv2.cvtColor(res, cv2.COLOR_HSV2BGR)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     #mask = cv2.inRange(hsv,lower_red, upper_red)
     #res = cv2.bitwise_and(frame,frame, mask=mask)
-    _,thresh = cv2.threshold(image,25,255, cv2.THRESH_BINARY)
+    _,threshB = cv2.threshold(image,25,255, cv2.THRESH_BINARY)
+    (cntsB, _) = cv2.findContours(threshB,cv2.cv.CV_RETR_TREE,cv2.cv.CV_CHAIN_APPROX_SIMPLE)
+    _,thresh = cv2.threshold(diff,25,255, cv2.THRESH_BINARY)
     (cnts, _) = cv2.findContours(thresh,cv2.cv.CV_RETR_TREE,cv2.cv.CV_CHAIN_APPROX_SIMPLE)
     for c in cnts:
-        M = cv2.moments(c)
-        if (M['m00'] != 0):
-            cx = int(M['m10']/M['m00'])
-            cy = int(M['m01']/M['m00'])
-            radius = cv2.arcLength(c,True)
-            cv2.circle(frame, (cx,cy), 10,(255,0, 0), cv2.cv.CV_FILLED)
+            M = cv2.moments(c)
+            if (M['m00'] != 0):
+                cx = int(M['m10']/M['m00'])
+                cy = int(M['m01']/M['m00'])
+                radius = cv2.arcLength(c,True)
+                cv2.circle(frame, (cx,cy), 5,(0,255, 0), cv2.cv.CV_FILLED)
+
 ##    LENGTH = len(cnts)
 ##    status = []
 ##
@@ -46,15 +69,15 @@ for i in range (0,50):
 ##        if i!= len(cnts)-1:
 ##            dist = find_if_close(cnts[i],cnts[i+1])
 ##            if dist == True:
-##                val = np.minimum(cnts[i],cnts[i+1])
-##                M = cv2.moments(val)
+##                #val = np.minimum(cnts[i],cnts[i+1])
+##                M = cv2.moments(cnts[i])
 ##                if (M['m00'] != 0):
 ##                    cx = int(M['m10']/M['m00'])
 ##                    cy = int(M['m01']/M['m00'])
-##                    cv2.circle(frame, (cx,cy), 10,(255,0, 0), cv2.cv.CV_FILLED)
+##                    cv2.circle(frame, (cx,cy), 5,(255,0, 0), cv2.cv.CV_FILLED)
     #cv2.circle(frame, (cx,cy), 10,(255,0, 0), cv2.cv.CV_FILLED)
     #cv2.drawContours(thresh,unified,-1,255,-1)
-    cv2.imshow("Blue players", frame)
+    cv2.imshow("Final", frame)
     cv2.waitKey(30)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
