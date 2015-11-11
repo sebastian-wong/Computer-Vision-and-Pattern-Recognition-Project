@@ -356,7 +356,7 @@ for x in range(0, frameCounts):
     retRight, right = capRight.read()
     combined1,_,_ = stitching(centre,left,homographyLeftCentre)
     combined2,__,__ = stitching(combined1,right,homographyLeftCentreRight)
-    finalImg = combined2[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre[:,0]),775:10579]
+    finalImg = combined2[translation1[1,2]+translation2[1,2]:translation1[1,2]+translation2[1,2]+len(centre[:,0]),502:9358]
     resize = cv2.resize(finalImg,(4902,540))
     if x%10 == 0:
         print x
