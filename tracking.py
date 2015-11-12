@@ -12,6 +12,18 @@ import cv2
 ##            elif i==row1-1 and j==row2-1:
 ##                return False
 
+def removeOverlaps(cnts1,cnts2):
+    for i,cnt1 in enumerate(cnts1):
+        #if i != len(cnts)-1:
+        for j,cnt2 in enumerate(cnts2):
+            (x, y, w, h) = cv2.boundingRect(cnt1)
+            (x1, y1, w1, h1) = cv2.boundingRect(cnt2)
+            if (x < x1+w1 and x+w > x1 and y< y1+h1 and y+h>y1):
+                cnts1.pop(i)
+            if (x1 < x+w and x1+w1 > x and y1< y+h and y1+h1>y):
+                cnts2.pop(j)
+    return cnts1,cnts2
+    
 cap = cv2.VideoCapture(os.getcwd() + "/stitchedVideo.avi")
 firstFrame = cv2.imread(os.getcwd()+ "/background.jpg")
 
@@ -19,25 +31,23 @@ lower_blue = np.array([110,50,50])
 upper_blue = np.array([130,255,255])
 lower_red = np.array([0,140,110])
 upper_red = np.array([20,200,255])
-lower_white = np.array([100,100,100])
-upper_white = np.array([255,255,255])
+lower_white = np.array([100,0,100])
+upper_white = np.array([200,200,200])
+lower_yellow = np.array([100,0,100])
+upper_yellow = np.array([200,200,200])
 
 cv2.namedWindow("Final", 0)
 cv2.resizeWindow("Final", 1200,500)
-mask = np.ones(firstFrame.shape[:2], dtype="uint8") * 255
+height,width,layers = firstFrame.shape
+maskImg = np.ones(firstFrame.shape[:2], dtype="uint8") * 255
+clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
 for i in range (0,100):
     _,frame = cap.read()
-
     #frame = cv2.GaussianBlur(frame,(5,5),0)
-    diff = cv2.absdiff(firstFrame,frame)
-    diff = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
-    #diff=cv2.bitwise_and(firstFrame,frame,frame)
-    #image = cv2.cvtColor(diff, cv2.COLOR_HSV2BGR)
-    #cv2.imshow("Final",diff)
-    #cv2.waitKey(30)
-    #res = cv2.bitwise_and(frame,frame,diff)
-    #lower_reso = cv2.pyrDown(frame)
-    #frame = cv2.GaussianBlur(frame,(5,5),0)
+    #diff = cv2.absdiff(firstFrame,frame)
+    #mask = cv2.inRange(diff, lower_red, upper_red)
+    #res = cv2.bitwise_and(diff,diff, mask=mask)
+    #diff = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     #find blue players
     mask = cv2.inRange(hsv, lower_blue, upper_blue)
@@ -52,15 +62,56 @@ for i in range (0,100):
     #res = cv2.bitwise_and(frame,frame, mask=mask)
     _,threshB = cv2.threshold(image,25,255, cv2.THRESH_BINARY)
     (cntsB, _) = cv2.findContours(threshB,cv2.cv.CV_RETR_TREE,cv2.cv.CV_CHAIN_APPROX_SIMPLE)
-    _,thresh = cv2.threshold(diff,25,255, cv2.THRESH_BINARY)
-    (cnts, _) = cv2.findContours(thresh,cv2.cv.CV_RETR_TREE,cv2.cv.CV_CHAIN_APPROX_SIMPLE)
-    for c in cnts:
-            M = cv2.moments(c)
-            if (M['m00'] != 0):
-                cx = int(M['m10']/M['m00'])
-                cy = int(M['m01']/M['m00'])
-                radius = cv2.arcLength(c,True)
-                cv2.circle(frame, (cx,cy), 5,(0,255, 0), cv2.cv.CV_FILLED)
+    #_,thresh = cv2.threshold(diff,25,255, cv2.THRESH_BINARY)
+    #(cnts, _) = cv2.findContours(thresh,cv2.cv.CV_RETR_TREE,cv2.cv.CV_CHAIN_APPROX_SIMPLE)
+    #result,resultB = removeOverlaps(cnts,cntsB)
+    for c in cntsB:
+        (x, y, w, h) = cv2.boundingRect(c)
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+##        area = cv2.contourArea(c)
+##        if (area < 40):
+##            contour_mask = np.zeros(diff.shape,np.uint8)
+##            cv2.drawContours(contour_mask,[c],0,(255,255,255),-1)
+##            mean = cv2.mean(hsv, mask = contour_mask)
+##            if (0, 60, 30) < mean < (35, 200, 60):
+##            #found red player
+##                (x, y, w, h) = cv2.boundingRect(c)
+##                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+####            elif (35, 0, 0) < mean < (80, 50, 85):
+##            # found blue player
+##                (x, y, w, h) = cv2.boundingRect(c)
+##                #cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+##            
+##    for c in resultB:
+##        (x, y, w, h) = cv2.boundingRect(c)
+##        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+##            M = cv2.moments(c)
+##            if (M['m00'] != 0):
+##                cx = int(M['m10']/M['m00'])
+##                cy = int(M['m01']/M['m00'])
+##                area = cv2.contourArea(c)
+##                radius = cv2.arcLength(c,True)
+##                if area < 10:
+##                    cv2.circle(frame, (cx,cy), 5,(0,0,255), cv2.cv.CV_FILLED)
+##                (x, y, w, h) = cv2.boundingRect(c)
+##                for c1 in cnts:
+##                    M = cv2.moments(c)
+##                    if (M['m00'] != 0):
+##                        cx = int(M['m10']/M['m00'])
+##                        cy = int(M['m01']/M['m00'])
+                #area = cv2.contourArea(c)
+                #if (area < 40):
+##                    contour_mask = np.zeros(diff.shape,np.uint8)
+##                    cv2.drawContours(contour_mask,[c],0,(255,255,255),-1)
+##                    mean = cv2.mean(diff, mask = contour_mask)
+##                    #blue
+##                    if ((35,0,0) <= mean <= (85,50,85)):
+##                        cv2.circle(frame, (cx,cy), 5,(255,0, 0), cv2.cv.CV_FILLED)
+##                    #red
+##                    elif ((0, 50, 0) <= mean <= (35, 255, 85)):
+##                        cv2.circle(frame, (cx,cy), 5,(0,0,255), cv2.cv.CV_FILLED)
+                    #else:
+                    #    cv2.circle(frame, (cx,cy), 5,(0,255, 0), cv2.cv.CV_FILLED)
 
 ##    LENGTH = len(cnts)
 ##    status = []
