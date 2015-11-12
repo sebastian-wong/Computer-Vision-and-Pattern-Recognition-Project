@@ -36,15 +36,18 @@ lower_blue = np.array([110,50,50])
 upper_blue = np.array([130,255,255])
 lower_red = np.array([0,140,110])
 upper_red = np.array([20,200,255])
-lower_white = np.array([100,0,100])
-upper_white = np.array([200,200,200])
+lower_white = np.array([42,10,130])
+upper_white = np.array([65,17,211])
 lower_yellow = np.array([30,150,200])
 upper_yellow = np.array([100,255,255])
-
 # lower_green = np.array([40,200,200])
 # upper_green = np.array([71,255,255])
+# for referees
 lower_green = np.array([30,150,200])
 upper_green = np.array([100,255,255])
+
+#lower_green = np.array([40,110,55])
+# upper_green = np.array([40,120,128])
 
 
 # lower_yellow = np.array([0,155,215])
@@ -105,11 +108,28 @@ for i in range (0,100):
     image = cv2.cvtColor(res, cv2.COLOR_HSV2BGR)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(image, (33,33),1)
+    # cv2.imshow('blur',blurred)
+    # cv2.waitKey(0)
     dilation = cv2.dilate(blurred,kernel,iterations = 6)
+    # cv2.imshow('dilation',dilation)
+    # cv2.waitKey(0)
     _,threshGreen = cv2.threshold(dilation,10,255, cv2.THRESH_BINARY)
     (cntsGreen, _) = cv2.findContours(threshGreen,cv2.cv.CV_RETR_TREE,cv2.cv.CV_CHAIN_APPROX_SIMPLE)
     
-                     
+    
+    maskWhite = cv2.inRange(hsv, lower_white, upper_white)
+    res = cv2.bitwise_and(frame,frame, mask=maskWhite)
+    image = cv2.cvtColor(res, cv2.COLOR_HSV2BGR)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(image, (33,33),1)
+    # cv2.imshow('blur',blurred)
+    # cv2.waitKey(0)
+    dilation = cv2.dilate(blurred,kernel,iterations = 6)
+    # cv2.imshow('dilation',dilation)
+    # cv2.waitKey(0)
+    _,threshWhite = cv2.threshold(dilation,10,255, cv2.THRESH_BINARY)
+    (cntsWhite, _) = cv2.findContours(threshWhite,cv2.cv.CV_RETR_TREE,cv2.cv.CV_CHAIN_APPROX_SIMPLE)
+                         
     for c in cntsBlue:
         # if cv2.contourArea(c) < 100:
         #     # move to next contour
@@ -121,9 +141,6 @@ for i in range (0,100):
             cv2.circle(frame, (cx,cy), 15,(255,0,0),2)
             
     for c in cntsRed:
-        # if cv2.contourArea(c) < 5:
-        #     # move to next contour
-        #     continue
         M = cv2.moments(c)
         if (M['m00'] != 0):
             cx = int(M['m10']/M['m00'])
@@ -131,24 +148,30 @@ for i in range (0,100):
             cv2.circle(frame, (cx,cy), 15,(0,0,255),2)
 
     for c in cntsYellow:
-        # if cv2.contourArea(c) < 200:
-        #     # move to next contour
-        #     continue
         M = cv2.moments(c)
         if (M['m00'] != 0):
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
             cv2.circle(frame, (cx,cy), 15,(0,255,255),2)
             
-    for c in cntsYellow:
-        # if cv2.contourArea(c) < 200:
-        #     # move to next contour
-        #     continue
+    for c in cntsGreen:
         M = cv2.moments(c)
         if (M['m00'] != 0):
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
-            cv2.circle(frame, (cx,cy), 15,(0,255,0),2)        
+            cv2.circle(frame, (cx,cy), 15,(0,255,0),2)
+    
+    for c in cntsWhite:
+        if cv2.contourArea(c) < 500 and cv2.contourArea(c) > 800:
+            # move to next contour
+            continue       
+        M = cv2.moments(c)
+        if (M['m00'] != 0):
+            cx = int(M['m10']/M['m00'])
+            cy = int(M['m01']/M['m00'])
+            cv2.circle(frame, (cx,cy), 15,(255,255,255),2)        
+            
+                    
 
     resizedImage = cv2.resize(frame,(2451,270))
     cv2.imshow("Final", resizedImage)
