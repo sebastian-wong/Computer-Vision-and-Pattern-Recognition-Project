@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import cv2
-
+import copy
 # def find_if_close(cnt1,cnt2):
 #    row1,row2 = cnt1.shape[0],cnt2.shape[0]
 #    for i in xrange(row1):
@@ -14,20 +14,16 @@ import cv2
 
 # def removeOverlaps(cnts):
 #     for i,cnt1 in enumerate(cnts):
-#         #if i != len(cnts)-1:
-#         for j,cnt2 in enumerate(cnts[:i+1]):
-#             (x, y, w, h) = cv2.boundingRect(cnt1)
-#             (x1, y1, w1, h1) = cv2.boundingRect(cnt2)
-#             if (x1 > x and x1 < x+w )
+#         if i < len(cnts)-2:
+#             for j,cnt2 in enumerate(cnts[i+1:]):
+#                 (x, y, w, h) = cv2.boundingRect(cnt1)
+#                 (x1, y1, w1, h1) = cv2.boundingRect(cnt2)
+#                 if ((x1 > x and x1 < x+w ) or (x1+w1 > x and x1+w1 < x+w) or (y1+h1 > y and y1+h1 < y+h) or (y1 > y and y1<y+h)):
+#                     cnts[j] = 0
+#     return cnts
 #
-#
-#
-#             if (x < x1+w1 and x+w > x1 and y< y1+h1 and y+h>y1):
-#                 cnts1.pop(i)
-#             if (x1 < x+w and x1+w1 > x and y1< y+h and y1+h1>y):
-#                 cnts2.pop(j)
-#     return cnts1,cnts2
-    
+# def removeOverlaps(cnts)
+#     for cnt in cnts:    
 cap = cv2.VideoCapture(os.getcwd() + "/stitchedVideo.mov")
 firstFrame = cv2.imread(os.getcwd()+ "/background.jpg")
 
@@ -65,26 +61,25 @@ for i in range (0,100):
     _,threshRed = cv2.threshold(image,25,255, cv2.THRESH_BINARY)
     (cntsRed, _) = cv2.findContours(threshRed,cv2.cv.CV_RETR_TREE,cv2.cv.CV_CHAIN_APPROX_SIMPLE)
         
-        
-        
-        
+    # cntsBlueResult = removeOverlaps(cntsBlue)
+    # cntsRedResult = removeOverlaps(cntsRed)             
         
     for c in cntsBlue:
         M = cv2.moments(c)
         if (M['m00'] != 0):
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
-            cv2.circle(frame, (cx,cy), 15,(255,0,0),2)
-            # (x, y, w, h) = cv2.boundingRect(c)
-            # cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            #cv2.circle(frame, (cx,cy), 15,(255,0,0),2)
+            (x, y, w, h) = cv2.boundingRect(c)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
     for c in cntsRed:
         M = cv2.moments(c)
         if (M['m00'] != 0):
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
-            cv2.circle(frame, (cx,cy), 15,(0,0,255),2)
-            # (x, y, w, h) = cv2.boundingRect(c)
-            # cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            #cv2.circle(frame, (cx,cy), 15,(0,0,255),2)
+            (x, y, w, h) = cv2.boundingRect(c)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
         
         
         
