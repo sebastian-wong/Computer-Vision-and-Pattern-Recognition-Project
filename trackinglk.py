@@ -2,19 +2,19 @@ import numpy as np
 import cv2
 import os
      
-cap = cv2.VideoCapture(os.getcwd() + "/stitchedVideo.avi")
+cap = cv2.VideoCapture(os.getcwd() + "/stitchedVideo.mov")
 firstFrame = cv2.imread(os.getcwd()+ "/background.jpg")
 
 # params for ShiTomasi corner detection
-feature_params = dict( maxCorners = 100,
-                       qualityLevel = 0.1,
-                       minDistance = 3,
-                       blockSize = 3 )
+feature_params = dict( maxCorners = 30,
+                       qualityLevel = 0.2,
+                       minDistance = 5,
+                       blockSize = 5 )
 
 # Parameters for lucas kanade optical flow
-lk_params = dict( winSize  = (15,15),
-                  maxLevel = 7,
-                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+lk_params = dict( winSize  = (5,5),
+                  maxLevel = 30,
+                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 100, 0.03))
 
 # Create some random colors
 color = np.random.randint(0,255,(3000,3))
@@ -33,7 +33,7 @@ p0 = cv2.goodFeaturesToTrack(old_gray, **feature_params)
 mask = np.zeros_like(old_frame)
 
 cv2.namedWindow("Final", 0)
-cv2.resizeWindow("Final", 1200,500)
+cv2.resizeWindow("Final", 100,100)
 
 while(1):
     ret,frame = cap.read()
@@ -55,7 +55,7 @@ while(1):
         cv2.circle(frame,(a,b),10,color[i].tolist(),-1)
     img = cv2.add(frame,mask)
 
-    cv2.imshow('Final',frame)
+    cv2.imshow("Final",frame)
     k = cv2.waitKey(30) & 0xff
     if k == 27:
        break
