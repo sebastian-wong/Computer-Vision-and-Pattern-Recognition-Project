@@ -3,32 +3,6 @@ import numpy as np
 import cv2
 import copy
 
-
-# def find_if_close(cnt1,cnt2):
-#    row1,row2 = cnt1.shape[0],cnt2.shape[0]
-#    for i in xrange(row1):
-#        for j in xrange(row2):
-#            dist = np.linalg.norm(cnt1[i]-cnt2[j])
-#            if abs(dist) < 10 :
-#                return True
-#            elif i==row1-1 and j==row2-1:
-#                return False
-
-# def removeOverlaps(cnts):
-#     for i,cnt1 in enumerate(cnts):
-#         if i < len(cnts)-2:
-#             for j,cnt2 in enumerate(cnts[i+1:]):
-#                 (x, y, w, h) = cv2.boundingRect(cnt1)
-#                 (x1, y1, w1, h1) = cv2.boundingRect(cnt2)
-#                 if((x1<x<x1+w1 and (y<y1<y+h or y<y1+h1<y+h or (y1+h1>y+h and y1<y)) or  ))
-#
-#
-#
-#                 if ((x1 > x and x1 < x+w ) or (x1+w1 > x and x1+w1 < x+w) or (y1+h1 > y and y1+h1 < y+h) or (y1 > y and y1<y+h)):
-#                     cnts[j] = 0
-#     return cnts
-
-
  
 cap = cv2.VideoCapture(os.getcwd() + "/stitchedVideo.mov")
 firstFrame = cv2.imread(os.getcwd()+ "/background.jpg")
@@ -160,7 +134,7 @@ for i in range (0,100):
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
             cv2.circle(frame, (cx,cy), 15,(0,255,0),2)
-    
+            
     for c in cntsWhite:
         if cv2.contourArea(c) < 500 and cv2.contourArea(c) > 800:
             # move to next contour
@@ -169,7 +143,25 @@ for i in range (0,100):
         if (M['m00'] != 0):
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
-            cv2.circle(frame, (cx,cy), 15,(255,255,255),2)        
+            cv2.circle(frame, (cx,cy), 15,(255,255,255),2)
+
+    # # left offsight
+    # # red players defend left
+    # for leftOffSightFrame in leftOffSightFrames:
+    #     if(leftOffSightFrame<=frames <= leftOffSightFrame + 120):
+        # x coordinate of left offsight(blue)  
+    redOffSightX = redPlayers[0][0]
+    redOffSight = ((redOffSightX,0),(redOffSightX,4902))
+    cv2.line(frame,redOffSight[0],redOffSight[1],(0,0,255),thickness = 1)
+    
+    # for rightOffSightFrame in rightOffSightFrames:
+    #     if(rightOffSightFrame<= frames <= rightOffSightFrame + 120):
+            # x coordinate of right offsight(red)
+    blueOffSightX = bluePlayers[-1][0]
+    blueOffSight = ((blueOffSightX,0),(blueOffSightX,4902))
+    cv2.line(frame,blueOffSight[0],blueOffSight[1],(255,0,0),thickness = 1)    
+
+
             
                     
 

@@ -47,7 +47,7 @@ def getKeypoints(img):
 
 
 #values for cropping 3126,116 and 4887,482 
-cap = cv2.VideoCapture(os.getcwd() + "/stitchedVideo.avi")
+cap = cv2.VideoCapture(os.getcwd() + "/stitchedVideo.mov")
 #cap = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mp4")
 firstFrame = cv2.imread(os.getcwd()+ "/football_field.jpg")
 background= cv2.imread(os.getcwd()+"/background.jpg")
@@ -213,26 +213,34 @@ for i in range (0,1000):
             if cy >100:
                 cv2.circle(frame, (cx,cy), 15,(0,255,0),2)
                 greenpoints.append([cx,cy])
+                
+                
+    redPlayers = []
+    bluePlayers = []            
 
     for pts in bluepoints:
         pt=np.array([[[pts[0],pts[1]]]],dtype='float32')
         pt=cv2.perspectiveTransform(pt,BEHomographyMatrix)
         #mappedbluepoints.append(pt)
-        if pt[0][0][0]>20 and pt[0][0][0]<579:
+        if (pt[0][0][0]>20 and pt[0][0][0]<579 and 10<pt[0][0][1]<365):
+            bluePlayers.append([pt[0][0][0],pt[0][0][1]])
+            bluePlayers = sorted(bluePlayers)
             cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(255,0,0),-1)
 
     for pts in redpoints:
         pt=np.array([[[pts[0],pts[1]]]],dtype='float32')
         pt=cv2.perspectiveTransform(pt,BEHomographyMatrix)
         #mappedredpoints.append(pt)
-        if pt[0][0][0]>20 and pt[0][0][0]<579:    
+        if (pt[0][0][0]>20 and pt[0][0][0]<579 and 10<pt[0][0][1]<365):
+            redPlayers.append([pt[0][0][0],pt[0][0][1]])
+            redPlayers = sorted(redPlayers)    
             cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(0,0,255),-1)
 
     for pts in yellowpoints:
         pt=np.array([[[pts[0],pts[1]]]],dtype='float32')
         pt=cv2.perspectiveTransform(pt,BEHomographyMatrix)
         #mappedyellowpoints.append(pt)
-        if pt[0][0][0]>20 and pt[0][0][0]<579:
+        if (pt[0][0][0]>20 and pt[0][0][0]<579):
             cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(0,255,255),-1)
 
     for pts in greenpoints:
@@ -241,15 +249,25 @@ for i in range (0,1000):
         #mappedgreenpoints.append(pt)
         #if pt[0][0][0]>20 and pt[0][0][0]<579:   
             #cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(0,255,0),-1)
-                
+
+    
+    redOffSightX = redPlayers[0][0]
+    redOffSight = ((redOffSightX,0),(redOffSightX,4902))
+    cv2.line(firstFramecopy,redOffSight[0],redOffSight[1],(0,0,255),thickness = 1)
+    
+    blueOffSightX = bluePlayers[-1][0]
+    blueOffSight = ((blueOffSightX,0),(blueOffSightX,4902))
+    cv2.line(firstFramecopy,blueOffSight[0],blueOffSight[1],(255,0,0),thickness = 1)
+
+        
     resize = cv2.resize(firstFramecopy,(1200,800))
     if i%10 == 0:
         print i
         #cv2.imwrite("AfterWarpImage"+str(i)+".jpg", firstFramecopy)
     video.write(resize)
-    resize = cv2.resize(frame,(1200,800))
+    # resize = cv2.resize(frame,(1200,800))
 
-    #cv2.imshow("Final", resize)
+    cv2.imshow("Final", resize)
     cv2.waitKey(30)
     key = cv2.waitKey(1) & 0xFF
     if key == ord("c"):
