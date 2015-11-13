@@ -194,8 +194,6 @@ for i in range (0,7142):
     #     M = cv2.moments(c)
     #     result = cv2.approxPolyDP(c,0.1,True)
     #     rows,columns,pointValues = result.shape
-    #     # rows,columns = result.shape
-    #     # if cv2.contourArea(c) > 675 and (rows<4 and rows>6):
     #     if cv2.contourArea(c) > 675 or (rows<4 and rows>6):
     #         # move to next contour
     #         continue
@@ -236,6 +234,7 @@ for i in range (0,7142):
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
             if cy >100:
+                cv2.circle(frame, (cx,cy), 15,(0,255,255),2)
                 yellowpoints.append([cx,cy])
             
     for c in cntsGreen:
@@ -247,6 +246,7 @@ for i in range (0,7142):
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
             if cy >100:
+                cv2.circle(frame, (cx,cy), 15,(0,255,0),2)
                 greenpoints.append([cx,cy])
                    
     for c in cntsWhite:
@@ -256,6 +256,7 @@ for i in range (0,7142):
                 cx = int(M['m10']/M['m00'])
                 cy = int(M['m01']/M['m00'])
                 if (175<cx<2542 and 116<cy<519):
+                    cv2.circle(frame, (cx,cy), 15,(255,255,255),2)
                     whitepoints.append([cx,cy])
                                           
     redPlayers = []
@@ -312,10 +313,10 @@ for i in range (0,7142):
     if i%10 == 0:
         print i
     #cv2.imshow("Final", resize)
-    # cv2.imshow("ballie",frame)
+    cv2.imshow("ballie",frame)
     # getKeypoints(resize)
-    # cv2.waitKey(0)
-    video.write(resize)
+    cv2.waitKey(30)
+    # video.write(resize)
     key = cv2.waitKey(1) & 0xFF
     if key == ord("c"):
         break
