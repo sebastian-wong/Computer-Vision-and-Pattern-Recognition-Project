@@ -60,14 +60,15 @@ lower_white = np.array([100,90,100])
 upper_white = np.array([150,120,140])
 lower_yellow = np.array([30,150,200])
 upper_yellow = np.array([100,255,255])
-lower_green = np.array([45, 100, 100])
-upper_green = np.array([55, 120,160])
+lower_green = np.array([50,100,100])
+upper_green = np.array([105,160,200])
 # lower_ball = np.array([30,56,175])
 # upper_ball = np.array([50,71,183])
 lower_ball = np.array([27,56,175])
 upper_ball = np.array([50,71,183])
 # upper_ball = np.array([31,94,102])
-
+# lower_green = np.array([50,100,100])
+# upper_green = np.array([160,210,200])
 frameCounts = int(cap.get(7))
 gradient=(482-116)/(4887-3126)*1.0
 intecept=116-(3126*gradient)
@@ -160,7 +161,7 @@ for i in range (0,7142):
 
     # find yellow players
     maskYellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
-    res = cv2.bitwise_and(frame,frame, mask=maskYellow)
+    res = cv2.bitwise_and(hsv,hsv, mask=maskYellow)
     image = cv2.cvtColor(res, cv2.COLOR_HSV2BGR)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(image, (33,33),1)
@@ -286,7 +287,7 @@ for i in range (0,7142):
     for pts in greenpoints:
         pt=np.array([[[pts[0],pts[1]]]],dtype='float32')
         pt=cv2.perspectiveTransform(pt,BEHomographyMatrix)
-        if (pt[0][0][0]>475 and pt[0][0][0]<600 and 10<pt[0][0][1]<365):
+        if (pt[0][0][0]>20 and pt[0][0][0]<579 and 10<pt[0][0][1]<365):
             cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(0,255,0),-1)
             
     for pts in whitepoints:
@@ -306,26 +307,18 @@ for i in range (0,7142):
     blueOffSightX = bluePlayers[-1][0]
     blueOffSight = ((blueOffSightX,0),(blueOffSightX,4902))
     cv2.line(firstFramecopy,blueOffSight[0],blueOffSight[1],(255,0,0),thickness = 1)
-
         
     resize = cv2.resize(firstFramecopy,(600,376))
     if i%10 == 0:
         print i
-
     #cv2.imshow("Final", resize)
     # cv2.imshow("ballie",frame)
     # getKeypoints(resize)
     # cv2.waitKey(0)
-    
     video.write(resize)
-    
     key = cv2.waitKey(1) & 0xFF
     if key == ord("c"):
         break
-    
-        
-
-cv2.waitKey(0)
 cv2.destroyAllWindows()
 video.release()
 cap.release()
