@@ -7,7 +7,6 @@ LENGTH = 1200
 HEIGHT = 800
 INPUT_FILE_NAME = "beforeWarpImage.jpg"
 OUTPUT_FILE_NAME = "bird_eye_view_video.jpg"
-
 refPt=[]
 
 def click_and_crop(event, x, y, flags, param):
@@ -96,7 +95,7 @@ BEHomographyMatrix=np.array(BEHomographyMatrix,dtype='float32')
 fourcc = cv2.cv.CV_FOURCC('D', 'I', 'V','X')
 video = cv2.VideoWriter("bird_eye_view_mappedVideo.avi",fourcc,24,(600,376),True)
 
-for i in range (0,1000):
+for i in range (0,7142):
 
     redpoints=[]
     bluepoints=[]
@@ -273,7 +272,7 @@ for i in range (0,1000):
     for pts in redpoints:
         pt=np.array([[[pts[0],pts[1]]]],dtype='float32')
         pt=cv2.perspectiveTransform(pt,BEHomographyMatrix)
-        if (pt[0][0][0]>20 and pt[0][0][0]<579 and 10<pt[0][0][1]<365):
+        if (pt[0][0][0]>20 and pt[0][0][0]<579 and 10<pt[0][0][1]<353):
             redPlayers.append([pt[0][0][0],pt[0][0][1]])
             redPlayers = sorted(redPlayers)    
             cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(0,0,255),-1)
@@ -313,13 +312,18 @@ for i in range (0,1000):
     if i%10 == 0:
         print i
 
-    cv2.imshow("Final", resize)
+    #cv2.imshow("Final", resize)
     # cv2.imshow("ballie",frame)
+    # getKeypoints(resize)
+    # cv2.waitKey(0)
     
-    cv2.waitKey(0)
+    video.write(resize)
+    
     key = cv2.waitKey(1) & 0xFF
     if key == ord("c"):
         break
+    
+        
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
