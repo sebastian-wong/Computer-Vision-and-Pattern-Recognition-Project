@@ -60,8 +60,12 @@ upper_white = np.array([200,200,200])
 lower_yellow = np.array([30,150,200])
 upper_yellow = np.array([100,255,255])
 
-lower_green = np.array([50,100,100])
-upper_green = np.array([160,210,200])
+lower_green = np.array([90,150,110])
+upper_green = np.array([95,160,125])
+
+
+# lower_green = np.array([50,100,100])
+# upper_green = np.array([160,210,200])
 
 frameCounts = int(cap.get(7))
 gradient=(482-116)/(4887-3126)*1.0
@@ -247,8 +251,8 @@ for i in range (0,1000):
         pt=np.array([[[pts[0],pts[1]]]],dtype='float32')
         pt=cv2.perspectiveTransform(pt,BEHomographyMatrix)
         #mappedgreenpoints.append(pt)
-        #if pt[0][0][0]>20 and pt[0][0][0]<579:   
-            #cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(0,255,0),-1)
+        if (pt[0][0][0]>20 and pt[0][0][0]<579 and 10<pt[0][0][1]<365):
+            cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(0,255,0),-1)
 
     
     redOffSightX = redPlayers[0][0]
@@ -260,13 +264,12 @@ for i in range (0,1000):
     cv2.line(firstFramecopy,blueOffSight[0],blueOffSight[1],(255,0,0),thickness = 1)
 
         
-    resize = cv2.resize(firstFramecopy,(1200,800))
+    resize = cv2.resize(firstFramecopy,(600,376))
     if i%10 == 0:
         print i
         #cv2.imwrite("AfterWarpImage"+str(i)+".jpg", firstFramecopy)
-    video.write(resize)
+    #video.write(resize)
     # resize = cv2.resize(frame,(1200,800))
-
     cv2.imshow("Final", resize)
     cv2.waitKey(30)
     key = cv2.waitKey(1) & 0xFF

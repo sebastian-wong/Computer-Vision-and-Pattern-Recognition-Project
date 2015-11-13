@@ -16,9 +16,18 @@ lower_yellow = np.array([30,150,200])
 upper_yellow = np.array([100,255,255])
 # lower_green = np.array([40,200,200])
 # upper_green = np.array([71,255,255])
-# for referees
-lower_green = np.array([30,150,200])
-upper_green = np.array([100,255,255])
+
+
+# # for referees
+# lower_green = np.array([30,150,200])
+# upper_green = np.array([100,255,255])
+
+
+# for goal keeper
+lower_green = np.array([90,150,110])
+upper_green = np.array([95,160,125])
+
+
 
 #lower_green = np.array([40,110,55])
 # upper_green = np.array([40,120,128])
@@ -150,21 +159,16 @@ for i in range (0,100):
     # for leftOffSightFrame in leftOffSightFrames:
     #     if(leftOffSightFrame<=frames <= leftOffSightFrame + 120):
         # x coordinate of left offsight(blue)  
-    redOffSightX = redPlayers[0][0]
-    redOffSight = ((redOffSightX,0),(redOffSightX,4902))
-    cv2.line(frame,redOffSight[0],redOffSight[1],(0,0,255),thickness = 1)
-    
-    # for rightOffSightFrame in rightOffSightFrames:
-    #     if(rightOffSightFrame<= frames <= rightOffSightFrame + 120):
-            # x coordinate of right offsight(red)
-    blueOffSightX = bluePlayers[-1][0]
-    blueOffSight = ((blueOffSightX,0),(blueOffSightX,4902))
-    cv2.line(frame,blueOffSight[0],blueOffSight[1],(255,0,0),thickness = 1)    
-
-
-            
-                    
-
+    # redOffSightX = redPlayers[0][0]
+    # redOffSight = ((redOffSightX,0),(redOffSightX,4902))
+    # cv2.line(frame,redOffSight[0],redOffSight[1],(0,0,255),thickness = 1)
+    #
+    # # for rightOffSightFrame in rightOffSightFrames:
+    # #     if(rightOffSightFrame<= frames <= rightOffSightFrame + 120):
+    #         # x coordinate of right offsight(red)
+    # blueOffSightX = bluePlayers[-1][0]
+    # blueOffSight = ((blueOffSightX,0),(blueOffSightX,4902))
+    # cv2.line(frame,blueOffSight[0],blueOffSight[1],(255,0,0),thickness = 1)
     resizedImage = cv2.resize(frame,(2451,270))
     cv2.imshow("Final", resizedImage)
     cv2.waitKey(30)
