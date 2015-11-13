@@ -66,6 +66,7 @@ def findDimensions(image, homography):
 
     (y, x) = image.shape[:2]
 
+    # four corners
     baseP1[:2] = [0,0]
     baseP2[:2] = [x,0]
     baseP3[:2] = [0,y]
@@ -77,11 +78,9 @@ def findDimensions(image, homography):
     minY = None
 
     for pt in [baseP1, baseP2, baseP3, baseP4]:
-
+        # transform
         hp = np.matrix(homography, np.float32) * np.matrix(pt, np.float32).T
-
         hp_arr = np.array(hp, np.float32)
-
         normal_pt = np.array([hp_arr[0]/hp_arr[2], hp_arr[1]/hp_arr[2]], np.float32)
 
         if ( maxX == None or normal_pt[0,0] > maxX ):
@@ -95,10 +94,8 @@ def findDimensions(image, homography):
 
         if ( minY == None or normal_pt[1,0] < minY ):
             minY = normal_pt[1,0]
-
     minX = min(0, minX)
     minY = min(0, minY)
-
     return (minX, minY, maxX, maxY)    
 
 # given two images
