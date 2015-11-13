@@ -61,15 +61,14 @@ lower_white = np.array([100,90,100])
 upper_white = np.array([150,120,140])
 lower_yellow = np.array([30,150,200])
 upper_yellow = np.array([100,255,255])
-lower_green = np.array([50,100,100])
-upper_green = np.array([105,160,200])
+lower_green = np.array([45, 100, 100])
+upper_green = np.array([55, 120,160])
 # lower_ball = np.array([30,56,175])
 # upper_ball = np.array([50,71,183])
 lower_ball = np.array([27,56,175])
 upper_ball = np.array([50,71,183])
 # upper_ball = np.array([31,94,102])
-# lower_green = np.array([50,100,100])
-# upper_green = np.array([160,210,200])
+
 frameCounts = int(cap.get(7))
 gradient=(482-116)/(4887-3126)*1.0
 intecept=116-(3126*gradient)
@@ -288,7 +287,7 @@ for i in range (0,1000):
     for pts in greenpoints:
         pt=np.array([[[pts[0],pts[1]]]],dtype='float32')
         pt=cv2.perspectiveTransform(pt,BEHomographyMatrix)
-        if (pt[0][0][0]>20 and pt[0][0][0]<579 and 10<pt[0][0][1]<365):
+        if (pt[0][0][0]>475 and pt[0][0][0]<600 and 10<pt[0][0][1]<365):
             cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(0,255,0),-1)
             
     for pts in whitepoints:
