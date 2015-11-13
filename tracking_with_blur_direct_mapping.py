@@ -7,29 +7,6 @@ LENGTH = 1200
 HEIGHT = 800
 INPUT_FILE_NAME = "beforeWarpImage.jpg"
 OUTPUT_FILE_NAME = "bird_eye_view_video.jpg"
-# def find_if_close(cnt1,cnt2):
-#    row1,row2 = cnt1.shape[0],cnt2.shape[0]
-#    for i in xrange(row1):
-#        for j in xrange(row2):
-#            dist = np.linalg.norm(cnt1[i]-cnt2[j])
-#            if abs(dist) < 10 :
-#                return True
-#            elif i==row1-1 and j==row2-1:
-#                return False
-
-# def removeOverlaps(cnts):
-#     for i,cnt1 in enumerate(cnts):
-#         if i < len(cnts)-2:
-#             for j,cnt2 in enumerate(cnts[i+1:]):
-#                 (x, y, w, h) = cv2.boundingRect(cnt1)
-#                 (x1, y1, w1, h1) = cv2.boundingRect(cnt2)
-#                 if((x1<x<x1+w1 and (y<y1<y+h or y<y1+h1<y+h or (y1+h1>y+h and y1<y)) or  ))
-#
-#
-#
-#                 if ((x1 > x and x1 < x+w ) or (x1+w1 > x and x1+w1 < x+w) or (y1+h1 > y and y1+h1 < y+h) or (y1 > y and y1<y+h)):
-#                     cnts[j] = 0
-#     return cnts
 
 refPt=[]
 
@@ -44,6 +21,11 @@ def click_and_crop(event, x, y, flags, param):
         Pt = (x, y)
         refPt.append(Pt)
         print Pt
+        print "pixel value is"
+        b=frame[y,x]
+        print b
+
+        
 
 def getKeypoints(img):
     clone = img.copy()
@@ -66,8 +48,9 @@ def getKeypoints(img):
 
 #values for cropping 3126,116 and 4887,482 
 cap = cv2.VideoCapture(os.getcwd() + "/stitchedVideo.avi")
-firstFrame = cv2.imread(os.getcwd()+ "/football field.png")
-#getKeypoints(firstFrame)
+#cap = cv2.VideoCapture(os.getcwd() + "/their_football_videos/right_camera.mp4")
+firstFrame = cv2.imread(os.getcwd()+ "/football_field.jpg")
+background= cv2.imread(os.getcwd()+"/background.jpg")
 lower_blue = np.array([110,50,50])
 upper_blue = np.array([130,255,255])
 lower_red = np.array([0,140,110])
@@ -77,30 +60,12 @@ upper_white = np.array([200,200,200])
 lower_yellow = np.array([30,150,200])
 upper_yellow = np.array([100,255,255])
 
-# lower_green = np.array([40,200,200])
-# upper_green = np.array([71,255,255])
-lower_green = np.array([30,150,200])
-upper_green = np.array([100,255,255])
+lower_green = np.array([50,100,100])
+upper_green = np.array([160,210,200])
 
-
-# lower_yellow = np.array([0,155,215])
-# # bright green
-# upper_yellow = np.array([100,255,255])
-#cv2.namedWindow("Final", 0)
 frameCounts = int(cap.get(7))
-#cv2.resizeWindow("Final", 1200,500)
-#height,width,layers = firstFrame.shape
-#maskImg = np.ones(firstFrame.shape[:2], dtype="uint8") * 255
-# clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4,4))
 gradient=(482-116)/(4887-3126)*1.0
 intecept=116-(3126*gradient)
-
-#create the field dimension with the height
-##field = np.zeros([LENGTH,HEIGHT])
-##TopLeftPointBefore = (float(0), float(0))
-##TopRightPointBefore = (float(LENGTH), float(0))
-##BottomRightPointBefore = (float(LENGTH), float(HEIGHT))
-##BottomLeftPointBefore = (float(0), float(HEIGHT))
 
 #create the field dimension with the height
 field = np.zeros([LENGTH,HEIGHT])
@@ -118,14 +83,16 @@ BottomLeftPointAfter  = (float(89), float(535))
 fieldCoordsB = [TopLeftPointBefore, TopRightPointBefore, BottomRightPointBefore, BottomLeftPointBefore]
 fieldCoordsA = [TopLeftPointAfter , TopRightPointAfter, BottomRightPointAfter, BottomLeftPointAfter]
 
+#getKeypoints(firstFrame)
+
 frameCounts = int(cap.get(7))
 print frameCounts
 BEHomographyMatrix, status = cv2.findHomography(np.array(fieldCoordsA), np.array(fieldCoordsB), 0)
 BEHomographyMatrix=np.array(BEHomographyMatrix,dtype='float32')
 fourcc = cv2.cv.CV_FOURCC('D', 'I', 'V','X')
-video = cv2.VideoWriter("bird_eye_view_stitchedVideo.avi",fourcc,24,(1200,800),True)
+video = cv2.VideoWriter("bird_eye_view_mappedVideo.avi",fourcc,24,(1200,800),True)
 
-for i in range (0,100):
+for i in range (0,1000):
 
     redpoints=[]
     bluepoints=[]
@@ -136,10 +103,20 @@ for i in range (0,100):
     mappedyellowpoints=[]
     mappedgreenpoints=[]
     _,frame = cap.read()
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    #getKeypoints(frame)
+    diff=cv2.absdiff(frame,background)
+    diff_hsv=cv2.cvtColor(diff,cv2.COLOR_BGR2HSV)
+    _,_,value=cv2.split(diff_hsv)
+    _,thresAbsDiff=cv2.threshold(value,40,255, cv2.THRESH_BINARY)
+    res=cv2.bitwise_and(frame,frame,mask=thresAbsDiff)
+    hsv = cv2.cvtColor(res, cv2.COLOR_BGR2HSV)
+
+    #resize = cv2.resize(thresAbsDiff,(1200,800))
+
+    #cv2.imshow("threshold",resize)
     kernel = np.ones((5,5),np.uint8)
     firstFramecopy=firstFrame.copy()
-        
+
     # find blue players
     maskBlue = cv2.inRange(hsv, lower_blue, upper_blue)
     res = cv2.bitwise_and(frame,frame, mask=maskBlue)
@@ -225,7 +202,7 @@ for i in range (0,100):
                 #cv2.circle(frame, (cx,cy), 15,(0,255,255),2)
                 yellowpoints.append([cx,cy])
             
-    for c in cntsYellow:
+    for c in cntsGreen:
         # if cv2.contourArea(c) < 200:
         #     # move to next contour
         #     continue
@@ -234,58 +211,45 @@ for i in range (0,100):
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
             if cy >100:
-                #cv2.circle(frame, (cx,cy), 15,(0,255,0),2)
+                cv2.circle(frame, (cx,cy), 15,(0,255,0),2)
                 greenpoints.append([cx,cy])
-
-##    bluepoints=np.array(bluepoints,dtype='float32')
-##    redpoints=np.array(redpoints,dtype='float32')
-##    yellowpoints=np.array(yellowpoints,dtype='float32')
-##    greenpoints=np.array(greenpoints,dtype='float32')
 
     for pts in bluepoints:
         pt=np.array([[[pts[0],pts[1]]]],dtype='float32')
         pt=cv2.perspectiveTransform(pt,BEHomographyMatrix)
         #mappedbluepoints.append(pt)
-        cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 15,(255,0,0),-1)
+        if pt[0][0][0]>20 and pt[0][0][0]<579:
+            cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(255,0,0),-1)
 
     for pts in redpoints:
         pt=np.array([[[pts[0],pts[1]]]],dtype='float32')
         pt=cv2.perspectiveTransform(pt,BEHomographyMatrix)
         #mappedredpoints.append(pt)
-        cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 15,(0,0,255),-1)
+        if pt[0][0][0]>20 and pt[0][0][0]<579:    
+            cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(0,0,255),-1)
 
     for pts in yellowpoints:
         pt=np.array([[[pts[0],pts[1]]]],dtype='float32')
         pt=cv2.perspectiveTransform(pt,BEHomographyMatrix)
         #mappedyellowpoints.append(pt)
-        cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 15,(0,255,255),-1)
+        if pt[0][0][0]>20 and pt[0][0][0]<579:
+            cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(0,255,255),-1)
 
     for pts in greenpoints:
         pt=np.array([[[pts[0],pts[1]]]],dtype='float32')
         pt=cv2.perspectiveTransform(pt,BEHomographyMatrix)
         #mappedgreenpoints.append(pt)
-        cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 15,(0,255,0),-1)
-            
-    #afterWarpImage = cv2.warpPerspective(frame, BEHomographyMatrix , field.shape)
-##    for pts in bluepoints:
-##        cv2.circle(firstFrame, (pts[0],pts[1]), 15,(255,0,0),2)
-##        
-##    for pts in redpoints:
-##        cv2.circle(firstFrame, (pts[0],pts[1]), 15,(0,0,255),2)
-##
-##    for pts in yellowpoints:
-##        cv2.circle(firstFrame, (pts[0],pts[1]), 15,(0,255,255),2)
-##        
-##    for pts in greenpoints:
-##        cv2.circle(firstFrame, (pts[0],pts[1]), 15,(0,255,0),2)
-    
+        #if pt[0][0][0]>20 and pt[0][0][0]<579:   
+            #cv2.circle(firstFramecopy, (pt[0][0][0],pt[0][0][1]), 5,(0,255,0),-1)
+                
     resize = cv2.resize(firstFramecopy,(1200,800))
     if i%10 == 0:
         print i
-        cv2.imwrite("AfterWarpImage"+str(i)+".jpg", firstFramecopy)
-    video.write(firstFramecopy)
-    
-    #cv2.imshow("Final", resizedImage)
+        #cv2.imwrite("AfterWarpImage"+str(i)+".jpg", firstFramecopy)
+    video.write(resize)
+    resize = cv2.resize(frame,(1200,800))
+
+    #cv2.imshow("Final", resize)
     cv2.waitKey(30)
     key = cv2.waitKey(1) & 0xFF
     if key == ord("c"):
